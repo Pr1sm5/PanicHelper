@@ -3,6 +3,7 @@
 
     <!-- Keine gefährlichen Berechtigungen nötig.
          ACTION_DIAL öffnet nur den Dialer, ohne CALL_PHONE-Berechtigung. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
