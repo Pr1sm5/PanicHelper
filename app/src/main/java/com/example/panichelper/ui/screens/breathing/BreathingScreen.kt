@@ -68,7 +68,7 @@ fun BreathingScreen(
     val coroutineScope = rememberCoroutineScope()
     val audioEnabled by preferencesManager.audioEnabled.collectAsState(initial = true)
     val hapticsEnabled by preferencesManager.hapticsEnabled.collectAsState(initial = true)
-    val soundPlayer = remember { SoundPlayer(context) { audioEnabled } }
+    val soundPlayer = remember { SoundPlayer(context, BreathingSoundCategory.entries) { audioEnabled } }
 
     DisposableEffect(Unit) {
         onDispose { soundPlayer.release() }
@@ -76,7 +76,16 @@ fun BreathingScreen(
 
     LaunchedEffect(Unit) {
         soundPlayer.play(BreathingSoundCategory.START)
-        soundPlayer.startBackgroundMusic(R.raw.background_music)
+    }
+
+    // Reagiert live auf den Audio-Schalter, statt die Musik nur beim Start zu prüfen -
+    // sonst läuft eine bereits gestartete Hintergrundmusik nach dem Ausschalten weiter.
+    LaunchedEffect(audioEnabled) {
+        if (audioEnabled) {
+            soundPlayer.startBackgroundMusic(R.raw.background_music)
+        } else {
+            soundPlayer.stopBackgroundMusic()
+        }
     }
 
     DisposableEffect(phase, vibrationIntensity, isCountingDown, hapticsEnabled) {

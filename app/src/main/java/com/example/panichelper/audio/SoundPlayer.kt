@@ -20,12 +20,17 @@ import androidx.annotation.RawRes
  * Eine Instanz gehört zu genau einem Screen-Aufenthalt (per `remember {}`
  * erzeugt, per [release] beim Verlassen aufgeräumt).
  *
+ * @param categoriesToPreload Kategorien, deren Varianten sofort beim Erstellen
+ * geladen werden (asynchron). Ohne Vorladen würde die erste Wiedergabe einer
+ * Kategorie oft stumm bleiben, weil [SoundPool.load] Zeit braucht und ein
+ * `play()` auf eine noch nicht fertig geladene Sample-ID wirkungslos verpufft.
  * @param isEnabled Wird vor jeder Wiedergabe geprüft (z. B. eine per
  * `collectAsState()` gebundene Einstellung) – so kann Audio global aus- und
  * eingeschaltet werden, ohne dass jede Aufrufstelle das selbst prüfen muss.
  */
 class SoundPlayer(
     context: Context,
+    categoriesToPreload: List<SoundCategory> = emptyList(),
     private val isEnabled: () -> Boolean = { true }
 ) {
 
@@ -49,6 +54,10 @@ class SoundPlayer(
     private val lastPlayedResId = mutableMapOf<SoundCategory, Int>()
 
     private var backgroundMusicPlayer: MediaPlayer? = null
+
+    init {
+        categoriesToPreload.forEach { preload(it) }
+    }
 
     /** Lädt die Varianten einer Kategorie vor (asynchron), falls noch nicht geschehen. */
     fun preload(category: SoundCategory) {

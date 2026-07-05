@@ -91,7 +91,7 @@ fun DailyExerciseSessionScreen(
     val coroutineScope = rememberCoroutineScope()
     val audioEnabled by preferencesManager.audioEnabled.collectAsState(initial = true)
     val hapticsEnabled by preferencesManager.hapticsEnabled.collectAsState(initial = true)
-    val soundPlayer = remember { SoundPlayer(context) { audioEnabled } }
+    val soundPlayer = remember { SoundPlayer(context, BreathingSoundCategory.entries) { audioEnabled } }
 
     DisposableEffect(Unit) {
         onDispose { soundPlayer.release() }
@@ -99,7 +99,17 @@ fun DailyExerciseSessionScreen(
 
     LaunchedEffect(Unit) {
         soundPlayer.play(BreathingSoundCategory.START)
-        soundPlayer.startBackgroundMusic(R.raw.background_music)
+    }
+
+    // Reagiert live auf den Audio-Schalter und das Sitzungsende, statt die Musik
+    // nur beim Start zu prüfen - sonst läuft eine bereits gestartete
+    // Hintergrundmusik nach dem Ausschalten oder nach Abschluss weiter.
+    LaunchedEffect(audioEnabled, isCompleted) {
+        if (audioEnabled && !isCompleted) {
+            soundPlayer.startBackgroundMusic(R.raw.background_music)
+        } else {
+            soundPlayer.stopBackgroundMusic()
+        }
     }
 
     DisposableEffect(phase, isCompleted, isCountingDown, hapticsEnabled) {
@@ -118,7 +128,6 @@ fun DailyExerciseSessionScreen(
     LaunchedEffect(isCompleted) {
         if (isCompleted) {
             soundPlayer.play(BreathingSoundCategory.END)
-            soundPlayer.stopBackgroundMusic()
         }
     }
 
