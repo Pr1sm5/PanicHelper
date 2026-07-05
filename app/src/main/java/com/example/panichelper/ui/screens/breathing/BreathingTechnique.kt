@@ -12,12 +12,24 @@ data class BreathingPhaseConfig(
 )
 
 data class BreathingTechnique(
+    val id: String,
     @StringRes val nameRes: Int,
     val phases: List<BreathingPhaseConfig>
 )
 
 object BreathingTechniques {
+    val FOUR_SEVEN_EIGHT = BreathingTechnique(
+        id = "four_seven_eight",
+        nameRes = R.string.technique_4_7_8,
+        phases = listOf(
+            BreathingPhaseConfig(R.string.breathing_phase_inhale, 4_000L, BreathingVisualState.EXPAND),
+            BreathingPhaseConfig(R.string.breathing_phase_hold,   7_000L, BreathingVisualState.HOLD_LARGE),
+            BreathingPhaseConfig(R.string.breathing_phase_exhale, 8_000L, BreathingVisualState.CONTRACT),
+        )
+    )
+
     val FOUR_FOUR_SIX = BreathingTechnique(
+        id = "four_four_six",
         nameRes = R.string.technique_4_4_6,
         phases = listOf(
             BreathingPhaseConfig(R.string.breathing_phase_inhale, 4_000L, BreathingVisualState.EXPAND),
@@ -27,6 +39,7 @@ object BreathingTechniques {
     )
 
     val BOX_BREATHING = BreathingTechnique(
+        id = "box",
         nameRes = R.string.technique_box,
         phases = listOf(
             BreathingPhaseConfig(R.string.breathing_phase_inhale, 4_000L, BreathingVisualState.EXPAND),
@@ -36,15 +49,8 @@ object BreathingTechniques {
         )
     )
 
-    val FOUR_SEVEN_EIGHT = BreathingTechnique(
-        nameRes = R.string.technique_4_7_8,
-        phases = listOf(
-            BreathingPhaseConfig(R.string.breathing_phase_inhale, 4_000L, BreathingVisualState.EXPAND),
-            BreathingPhaseConfig(R.string.breathing_phase_hold,   7_000L, BreathingVisualState.HOLD_LARGE),
-            BreathingPhaseConfig(R.string.breathing_phase_exhale, 8_000L, BreathingVisualState.CONTRACT),
-        )
-    )
-
     val ALL = listOf(FOUR_FOUR_SIX, BOX_BREATHING, FOUR_SEVEN_EIGHT)
-    val DEFAULT = FOUR_FOUR_SIX
+    val DEFAULT = FOUR_SEVEN_EIGHT
+
+    fun byId(id: String): BreathingTechnique = ALL.firstOrNull { it.id == id } ?: DEFAULT
 }

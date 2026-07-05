@@ -25,10 +25,10 @@ object PanicHelperRoutes {
     const val DISTRACTION = "distraction"
     const val HELP = "help"
     const val DAILY_EXERCISE = "daily_exercise"
-    const val DAILY_EXERCISE_SESSION = "daily_exercise_session/{minutes}"
+    const val DAILY_EXERCISE_SESSION = "daily_exercise_session/{minutes}/{techniqueId}"
     const val SETTINGS = "settings"
 
-    fun dailyExerciseSession(minutes: Int) = "daily_exercise_session/$minutes"
+    fun dailyExerciseSession(minutes: Int, techniqueId: String) = "daily_exercise_session/$minutes/$techniqueId"
 }
 
 /**
@@ -84,19 +84,24 @@ fun PanicHelperNavGraph(
         composable(PanicHelperRoutes.DAILY_EXERCISE) {
             DailyExerciseScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onStartSession = { minutes ->
-                    navController.navigate(PanicHelperRoutes.dailyExerciseSession(minutes))
+                onStartSession = { minutes, techniqueId ->
+                    navController.navigate(PanicHelperRoutes.dailyExerciseSession(minutes, techniqueId))
                 }
             )
         }
 
         composable(
             route = PanicHelperRoutes.DAILY_EXERCISE_SESSION,
-            arguments = listOf(navArgument("minutes") { type = NavType.IntType })
+            arguments = listOf(
+                navArgument("minutes") { type = NavType.IntType },
+                navArgument("techniqueId") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
             val minutes = backStackEntry.arguments?.getInt("minutes") ?: 5
+            val techniqueId = backStackEntry.arguments?.getString("techniqueId").orEmpty()
             DailyExerciseSessionScreen(
                 minutes = minutes,
+                techniqueId = techniqueId,
                 onFinish = { navController.popBackStack() }
             )
         }

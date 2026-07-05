@@ -1,6 +1,7 @@
 package com.example.panichelper.util
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -37,6 +38,9 @@ class PreferencesManager(private val context: Context) {
 
         private val USER_PROFILE_KEY = stringPreferencesKey("user_profile")
         private val ROUTINE_PROGRESS_KEY = stringPreferencesKey("routine_progress")
+
+        private val AUDIO_ENABLED_KEY = booleanPreferencesKey("audio_enabled")
+        private val HAPTICS_ENABLED_KEY = booleanPreferencesKey("haptics_enabled")
     }
 
     /** Beobachtbarer Strom der gespeicherten Vertrauenspersonen. */
@@ -106,5 +110,23 @@ class PreferencesManager(private val context: Context) {
             preferences[ROUTINE_PROGRESS_KEY] = Json.encodeToString(updated)
         }
         return updated
+    }
+
+    /** Beobachtbarer Strom, ob Sound-Effekte/Hintergrundmusik aktiviert sind (Standard: an). */
+    val audioEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[AUDIO_ENABLED_KEY] ?: true
+    }
+
+    /** Beobachtbarer Strom, ob Vibrations-Feedback aktiviert ist (Standard: an). */
+    val hapticsEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[HAPTICS_ENABLED_KEY] ?: true
+    }
+
+    suspend fun setAudioEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences -> preferences[AUDIO_ENABLED_KEY] = enabled }
+    }
+
+    suspend fun setHapticsEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences -> preferences[HAPTICS_ENABLED_KEY] = enabled }
     }
 }

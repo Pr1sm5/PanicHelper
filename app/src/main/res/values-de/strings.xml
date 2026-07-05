@@ -89,6 +89,7 @@
     <string name="daily_exercise_streak_empty">Starte heute deine Streak</string>
     <string name="daily_exercise_streak_record">Rekord: %1$d Tage</string>
     <string name="daily_exercise_choose_length">Wähle eine Länge</string>
+    <string name="daily_exercise_choose_technique">Wähle eine Methode</string>
     <string name="daily_exercise_start_button">Übung starten</string>
     <string name="daily_exercise_name_label">Dein Name</string>
     <string name="daily_exercise_choose_color">Wähle eine Farbe</string>
@@ -101,4 +102,8 @@
     <string name="settings_language_subtitle">Wähle die Sprache der App.</string>
     <string name="settings_language_german">Deutsch</string>
     <string name="settings_language_english">English</string>
+    <string name="settings_sound_title">Ton &amp; Vibration</string>
+    <string name="settings_sound_subtitle">Steuere Sprach-Hinweise, Hintergrundmusik und Vibration während der Atemübungen.</string>
+    <string name="settings_audio_label">Ton</string>
+    <string name="settings_haptics_label">Vibration</string>
 </resources>

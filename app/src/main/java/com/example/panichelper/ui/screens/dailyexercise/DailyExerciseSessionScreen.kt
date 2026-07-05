@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,7 +25,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -33,15 +40,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.panichelper.R
+import com.example.panichelper.audio.SoundPlayer
 import com.example.panichelper.data.RoutineProgress
 import com.example.panichelper.ui.components.AnimatedBreathingCircle
 import com.example.panichelper.ui.components.BreathingCircleDefaults
 import com.example.panichelper.ui.components.PrimaryButton
+import com.example.panichelper.ui.screens.breathing.BreathingSoundCategory
+import com.example.panichelper.ui.screens.breathing.BreathingTechniques
 import com.example.panichelper.ui.screens.breathing.BreathingVisualState
 import com.example.panichelper.ui.screens.breathing.cancelBreathingHaptic
+import com.example.panichelper.ui.screens.breathing.playForBreathingPhase
 import com.example.panichelper.ui.screens.breathing.triggerBreathingHaptic
 import com.example.panichelper.ui.theme.BreathingDark
 import com.example.panichelper.ui.theme.BreathingLight
+import com.example.panichelper.util.PreferencesManager
+import kotlinx.coroutines.launch
 
 /**
  * Zeitlich begrenzte, geführte Atemsitzung des täglichen Übungsmodus.
@@ -50,20 +63,23 @@ import com.example.panichelper.ui.theme.BreathingLight
  * Routine-Statistik ein.
  *
  * @param minutes Länge der Sitzung in Minuten (aus dem Navigations-Argument).
+ * @param techniqueId ID der gewählten Atemtechnik (aus dem Navigations-Argument).
  * @param onFinish Callback zum Zurücknavigieren zur Übersicht (Abbruch oder Abschluss).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyExerciseSessionScreen(
     minutes: Int,
+    techniqueId: String,
     onFinish: () -> Unit
 ) {
     val context = LocalContext.current
     val application = context.applicationContext as Application
+    val technique = remember(techniqueId) { BreathingTechniques.byId(techniqueId) }
     val viewModel: DailyExerciseSessionViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
-                DailyExerciseSessionViewModel(application, minutes * 60_000L)
+                DailyExerciseSessionViewModel(application, minutes * 60_000L, technique)
             }
         }
     )
@@ -71,12 +87,39 @@ fun DailyExerciseSessionScreen(
     val phase = viewModel.currentPhase
     val isCompleted = viewModel.isCompleted
     val isCountingDown = viewModel.isCountingDown
+    val preferencesManager = remember { PreferencesManager(context) }
+    val coroutineScope = rememberCoroutineScope()
+    val audioEnabled by preferencesManager.audioEnabled.collectAsState(initial = true)
+    val hapticsEnabled by preferencesManager.hapticsEnabled.collectAsState(initial = true)
+    val soundPlayer = remember { SoundPlayer(context) { audioEnabled } }
 
-    DisposableEffect(phase, isCompleted, isCountingDown) {
-        if (!isCompleted && !isCountingDown) {
+    DisposableEffect(Unit) {
+        onDispose { soundPlayer.release() }
+    }
+
+    LaunchedEffect(Unit) {
+        soundPlayer.play(BreathingSoundCategory.START)
+        soundPlayer.startBackgroundMusic(R.raw.background_music)
+    }
+
+    DisposableEffect(phase, isCompleted, isCountingDown, hapticsEnabled) {
+        if (!isCompleted && !isCountingDown && hapticsEnabled) {
             triggerBreathingHaptic(context, phase.visualState, phase.durationMillis, 0.7f)
         }
         onDispose { cancelBreathingHaptic(context) }
+    }
+
+    LaunchedEffect(phase, isCountingDown, isCompleted) {
+        if (!isCompleted && !isCountingDown) {
+            soundPlayer.playForBreathingPhase(phase)
+        }
+    }
+
+    LaunchedEffect(isCompleted) {
+        if (isCompleted) {
+            soundPlayer.play(BreathingSoundCategory.END)
+            soundPlayer.stopBackgroundMusic()
+        }
     }
 
     val targetSize = if (isCountingDown) {
@@ -118,6 +161,31 @@ fun DailyExerciseSessionScreen(
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.action_back)
+                        )
+                    }
+                },
+                actions = {
+                    val mutedTint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch { preferencesManager.setAudioEnabled(!audioEnabled) }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (audioEnabled) Icons.Filled.VolumeUp else Icons.Filled.VolumeOff,
+                            contentDescription = stringResource(R.string.settings_audio_label),
+                            tint = if (audioEnabled) MaterialTheme.colorScheme.onBackground else mutedTint
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch { preferencesManager.setHapticsEnabled(!hapticsEnabled) }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Vibration,
+                            contentDescription = stringResource(R.string.settings_haptics_label),
+                            tint = if (hapticsEnabled) MaterialTheme.colorScheme.onBackground else mutedTint
                         )
                     }
                 },

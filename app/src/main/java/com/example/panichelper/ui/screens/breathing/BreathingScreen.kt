@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -27,7 +30,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -37,10 +44,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.panichelper.R
+import com.example.panichelper.audio.SoundPlayer
 import com.example.panichelper.ui.components.AnimatedBreathingCircle
 import com.example.panichelper.ui.components.BreathingCircleDefaults
 import com.example.panichelper.ui.theme.BreathingDark
 import com.example.panichelper.ui.theme.BreathingLight
+import com.example.panichelper.util.PreferencesManager
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,12 +64,34 @@ fun BreathingScreen(
     val vibrationIntensity = viewModel.vibrationIntensity
     val isCountingDown = viewModel.isCountingDown
     val context = LocalContext.current
+    val preferencesManager = remember { PreferencesManager(context) }
+    val coroutineScope = rememberCoroutineScope()
+    val audioEnabled by preferencesManager.audioEnabled.collectAsState(initial = true)
+    val hapticsEnabled by preferencesManager.hapticsEnabled.collectAsState(initial = true)
+    val soundPlayer = remember { SoundPlayer(context) { audioEnabled } }
 
-    DisposableEffect(phase, vibrationIntensity, isCountingDown) {
-        if (!isCountingDown) {
+    DisposableEffect(Unit) {
+        onDispose { soundPlayer.release() }
+    }
+
+    LaunchedEffect(Unit) {
+        soundPlayer.play(BreathingSoundCategory.START)
+        soundPlayer.startBackgroundMusic(R.raw.background_music)
+    }
+
+    DisposableEffect(phase, vibrationIntensity, isCountingDown, hapticsEnabled) {
+        if (!isCountingDown && hapticsEnabled) {
             triggerBreathingHaptic(context, phase.visualState, phase.durationMillis, vibrationIntensity)
         }
         onDispose { cancelBreathingHaptic(context) }
+    }
+
+    // Eigener Effekt (ohne vibrationIntensity als Key), damit das Verschieben
+    // des Vibrations-Reglers keinen erneuten Sprach-Hinweis auslöst.
+    LaunchedEffect(phase, isCountingDown) {
+        if (!isCountingDown) {
+            soundPlayer.playForBreathingPhase(phase)
+        }
     }
 
     val targetSize = if (isCountingDown) {
@@ -101,6 +133,31 @@ fun BreathingScreen(
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.action_back)
+                        )
+                    }
+                },
+                actions = {
+                    val mutedTint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch { preferencesManager.setAudioEnabled(!audioEnabled) }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (audioEnabled) Icons.Filled.VolumeUp else Icons.Filled.VolumeOff,
+                            contentDescription = stringResource(R.string.settings_audio_label),
+                            tint = if (audioEnabled) MaterialTheme.colorScheme.onBackground else mutedTint
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch { preferencesManager.setHapticsEnabled(!hapticsEnabled) }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Vibration,
+                            contentDescription = stringResource(R.string.settings_haptics_label),
+                            tint = if (hapticsEnabled) MaterialTheme.colorScheme.onBackground else mutedTint
                         )
                     }
                 },

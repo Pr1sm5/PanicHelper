@@ -1,14 +1,12 @@
 package com.example.panichelper.ui.screens.home
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -20,8 +18,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -43,7 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.panichelper.R
 import com.example.panichelper.ui.components.PrimaryButton
-import com.example.panichelper.ui.theme.EnsoCardBorder
+import com.example.panichelper.ui.theme.EnsoHelp
+import com.example.panichelper.ui.theme.EnsoHelpContainer
 
 /**
  * Startbildschirm der App.
@@ -90,80 +87,70 @@ fun HomeScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.spacedBy(40.dp, Alignment.CenterVertically)
         ) {
             HomeHeroCard()
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    PrimaryButton(
+                        text = stringResource(R.string.home_breathing_button),
+                        icon = Icons.Filled.Air,
+                        onClick = onNavigateToBreathing,
+                        modifier = Modifier.weight(1f)
+                    )
+                    PrimaryButton(
+                        text = stringResource(R.string.home_distraction_button),
+                        icon = Icons.Filled.Pets,
+                        onClick = onNavigateToDistraction,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
 
-            PrimaryButton(
-                text = stringResource(R.string.home_breathing_button),
-                icon = Icons.Filled.Air,
-                onClick = onNavigateToBreathing,
-                modifier = Modifier.padding(bottom = 14.dp)
-            )
-
-            PrimaryButton(
-                text = stringResource(R.string.home_distraction_button),
-                icon = Icons.Filled.Pets,
-                onClick = onNavigateToDistraction,
-                modifier = Modifier.padding(bottom = 14.dp)
-            )
-
-            PrimaryButton(
-                text = stringResource(R.string.home_help_button),
-                icon = Icons.Filled.Phone,
-                onClick = onNavigateToHelp,
-                modifier = Modifier.padding(bottom = 14.dp)
-            )
-
-            PrimaryButton(
-                text = stringResource(R.string.home_daily_exercise_button),
-                icon = Icons.Filled.EmojiEvents,
-                onClick = onNavigateToDailyExercise
-            )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    PrimaryButton(
+                        text = stringResource(R.string.home_help_button),
+                        icon = Icons.Filled.Phone,
+                        onClick = onNavigateToHelp,
+                        modifier = Modifier.weight(1f),
+                        containerColor = EnsoHelpContainer,
+                        contentColor = EnsoHelp,
+                        iconTint = EnsoHelp,
+                        borderColor = EnsoHelp.copy(alpha = 0.5f)
+                    )
+                    PrimaryButton(
+                        text = stringResource(R.string.home_daily_exercise_button),
+                        icon = Icons.Filled.EmojiEvents,
+                        onClick = onNavigateToDailyExercise,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
 private fun HomeHeroCard() {
-    Card(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        border = BorderStroke(1.dp, EnsoCardBorder),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 22.dp, vertical = 28.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            EnsoMark(modifier = Modifier.size(184.dp))
+        EnsoMark(modifier = Modifier.size(240.dp))
 
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontFamily = FontFamily.Serif,
-                    fontStyle = FontStyle.Italic,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 36.sp
-                ),
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 18.dp)
-            )
-
-            Text(
-                text = stringResource(R.string.home_tagline),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 10.dp)
-            )
-        }
+        Text(
+            text = stringResource(R.string.home_tagline),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 18.dp)
+        )
     }
 }
 

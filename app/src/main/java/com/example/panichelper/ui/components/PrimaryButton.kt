@@ -14,37 +14,48 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.example.panichelper.ui.theme.EnsoCardBorder
 
 /**
  * Großer, gut sichtbarer Primär-Button für die gesamte App.
- * Wird u.a. für die drei Hauptfunktionen auf dem HomeScreen verwendet.
+ * Wird u.a. für die Hauptfunktionen auf dem HomeScreen verwendet.
+ * Bewusst groß gehalten (Touch-Ziel + Lesbarkeit), da Feinmotorik und
+ * Konzentration während einer Panikattacke eingeschränkt sein können.
  *
  * @param text Beschriftung des Buttons.
  * @param onClick Aktion bei Klick.
  * @param icon Optionales Icon, das links vom Text angezeigt wird.
  * @param modifier Optionaler Modifier für äußere Anpassungen (z. B. Breite).
+ * @param containerColor Hintergrundfarbe, überschreibbar für Buttons mit eigener Farbkodierung (z. B. Hilfe).
+ * @param contentColor Textfarbe, passend zu [containerColor].
+ * @param iconTint Icon-Farbe, passend zu [containerColor].
+ * @param borderColor Randfarbe, passend zu [containerColor].
  */
 @Composable
 fun PrimaryButton(
     text: String,
     onClick: () -> Unit,
     icon: ImageVector? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
+    borderColor: Color = EnsoCardBorder
 ) {
     Button(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 64.dp),
+            .heightIn(min = 84.dp),
         shape = MaterialTheme.shapes.large,
-        border = BorderStroke(1.dp, EnsoCardBorder),
+        border = BorderStroke(1.dp, borderColor),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = MaterialTheme.colorScheme.onSurface
+            containerColor = containerColor,
+            contentColor = contentColor
         )
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -52,10 +63,10 @@ fun PrimaryButton(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = iconTint,
                     modifier = Modifier
-                        .size(26.dp)
-                        .padding(end = 10.dp)
+                        .size(30.dp)
+                        .padding(end = 12.dp)
                 )
             }
             Text(

@@ -8,7 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.panichelper.data.RoutineProgress
-import com.example.panichelper.ui.screens.breathing.BreathingTechniques
+import com.example.panichelper.ui.screens.breathing.BreathingTechnique
 import com.example.panichelper.ui.screens.breathing.BreathingPhaseConfig
 import com.example.panichelper.util.PreferencesManager
 import kotlinx.coroutines.Job
@@ -22,15 +22,17 @@ import kotlinx.coroutines.launch
  * erreicht ist, und trägt den Abschluss danach einmalig in die Routine-Statistik ein.
  *
  * @param totalDurationMillis Gesamtdauer der Sitzung in Millisekunden.
+ * @param technique Gewählte Atemtechnik, deren Phasen in der Sitzung durchlaufen werden.
  */
 class DailyExerciseSessionViewModel(
     application: Application,
-    private val totalDurationMillis: Long
+    private val totalDurationMillis: Long,
+    private val technique: BreathingTechnique
 ) : AndroidViewModel(application) {
 
     private val preferencesManager = PreferencesManager(application)
 
-    var currentPhase by mutableStateOf<BreathingPhaseConfig>(BreathingTechniques.DEFAULT.phases.first())
+    var currentPhase by mutableStateOf<BreathingPhaseConfig>(technique.phases.first())
         private set
 
     var remainingMillis by mutableStateOf(totalDurationMillis)
@@ -71,7 +73,7 @@ class DailyExerciseSessionViewModel(
         // Steuert nur die Atemphasen-Animation (wechselt alle paar Sekunden).
         phaseJob = viewModelScope.launch {
             outer@ while (isActive) {
-                for (phase in BreathingTechniques.DEFAULT.phases) {
+                for (phase in technique.phases) {
                     if (System.currentTimeMillis() - startTime >= totalDurationMillis) break@outer
                     currentPhase = phase
                     delay(phase.durationMillis)

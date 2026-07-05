@@ -9,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.panichelper.data.DailyExerciseDuration
 import com.example.panichelper.data.RoutineProgress
 import com.example.panichelper.data.UserProfile
+import com.example.panichelper.ui.screens.breathing.BreathingTechnique
+import com.example.panichelper.ui.screens.breathing.BreathingTechniques
 import com.example.panichelper.util.PreferencesManager
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -31,6 +33,9 @@ class DailyExerciseViewModel(application: Application) : AndroidViewModel(applic
     var selectedDuration by mutableStateOf(DailyExerciseDuration.FIVE)
         private set
 
+    var selectedTechnique by mutableStateOf(BreathingTechniques.DEFAULT)
+        private set
+
     init {
         preferencesManager.userProfile
             .onEach { profile = it }
@@ -51,5 +56,10 @@ class DailyExerciseViewModel(application: Application) : AndroidViewModel(applic
     /** Wählt die Übungslänge für die nächste Sitzung. */
     fun selectDuration(duration: DailyExerciseDuration) {
         selectedDuration = duration
+    }
+
+    /** Wählt die Atemtechnik für die nächste Sitzung. */
+    fun selectTechnique(technique: BreathingTechnique) {
+        selectedTechnique = technique
     }
 }

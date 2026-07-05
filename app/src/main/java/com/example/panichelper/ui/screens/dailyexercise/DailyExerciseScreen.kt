@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.panichelper.R
 import com.example.panichelper.data.DailyExerciseDuration
+import com.example.panichelper.ui.screens.breathing.BreathingTechniques
 import com.example.panichelper.ui.components.HeaderCard
 import com.example.panichelper.ui.components.PrimaryButton
 import com.example.panichelper.ui.components.ProfileAvatar
@@ -52,7 +53,7 @@ import com.example.panichelper.ui.theme.ProfileColorPalette
 @Composable
 fun DailyExerciseScreen(
     onNavigateBack: () -> Unit,
-    onStartSession: (Int) -> Unit,
+    onStartSession: (Int, String) -> Unit,
     viewModel: DailyExerciseViewModel = viewModel()
 ) {
     val profile = viewModel.profile
@@ -152,9 +153,30 @@ fun DailyExerciseScreen(
                     }
                 }
 
+                Text(
+                    text = stringResource(R.string.daily_exercise_choose_technique),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp, bottom = 12.dp)
+                )
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    BreathingTechniques.ALL.forEach { technique ->
+                        FilterChip(
+                            selected = viewModel.selectedTechnique == technique,
+                            onClick = { viewModel.selectTechnique(technique) },
+                            label = { Text(stringResource(technique.nameRes)) }
+                        )
+                    }
+                }
+
                 PrimaryButton(
                     text = stringResource(R.string.daily_exercise_start_button),
-                    onClick = { onStartSession(viewModel.selectedDuration.minutes) },
+                    onClick = {
+                        onStartSession(viewModel.selectedDuration.minutes, viewModel.selectedTechnique.id)
+                    },
                     modifier = Modifier.padding(top = 32.dp)
                 )
             }
