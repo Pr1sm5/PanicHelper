@@ -18,6 +18,13 @@ class BreathingViewModel : ViewModel() {
     var currentPhase by mutableStateOf(BreathingTechniques.DEFAULT.phases.first())
         private set
 
+    // Index von currentPhase innerhalb selectedTechnique.phases. Wird separat
+    // gepflegt (statt über Gleichheit von currentPhase ermittelt), da einzelne
+    // Techniken (z. B. Box-Breathing) zwei Phasen mit identischer Konfiguration
+    // enthalten können (zwei "Halten"-Schritte).
+    var currentPhaseIndex by mutableIntStateOf(0)
+        private set
+
     var completedCycles by mutableIntStateOf(0)
         private set
 
@@ -49,6 +56,7 @@ class BreathingViewModel : ViewModel() {
         if (technique == selectedTechnique) return
         selectedTechnique = technique
         completedCycles = 0
+        currentPhaseIndex = 0
         cycleJob?.cancel()
         startCycle()
     }
@@ -60,8 +68,9 @@ class BreathingViewModel : ViewModel() {
     private fun startCycle() {
         cycleJob = viewModelScope.launch {
             while (true) {
-                for (phase in selectedTechnique.phases) {
+                for ((index, phase) in selectedTechnique.phases.withIndex()) {
                     currentPhase = phase
+                    currentPhaseIndex = index
                     delay(phase.durationMillis)
                 }
                 completedCycles++

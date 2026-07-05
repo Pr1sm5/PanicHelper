@@ -156,7 +156,7 @@ fun DailyExerciseSessionScreen(
                     modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
-                    AnimatedBreathingCircle(size = animatedSize, color = animatedColor)
+                    AnimatedBreathingCircle(circleSize = animatedSize, color = animatedColor)
                     if (isCountingDown) {
                         Text(
                             text = viewModel.countdownValue.toString(),

@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -124,11 +125,48 @@ fun BreathingScreen(
                 modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
             )
 
+            Text(
+                text = stringResource(R.string.breathing_how_it_works),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+            ) {
+                technique.phases.forEachIndexed { index, stepPhase ->
+                    val isActiveStep = !isCountingDown && index == viewModel.currentPhaseIndex
+                    Text(
+                        text = stringResource(stepPhase.labelRes),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = if (isActiveStep) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isActiveStep) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+                        }
+                    )
+                    if (index != technique.phases.lastIndex) {
+                        Text(
+                            text = "→",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                            modifier = Modifier.padding(horizontal = 6.dp)
+                        )
+                    }
+                }
+            }
+
             Box(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                AnimatedBreathingCircle(size = animatedSize, color = animatedColor)
+                AnimatedBreathingCircle(circleSize = animatedSize, color = animatedColor)
                 if (isCountingDown) {
                     Text(
                         text = viewModel.countdownValue.toString(),

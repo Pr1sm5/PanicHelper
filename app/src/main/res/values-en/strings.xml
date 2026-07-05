@@ -22,6 +22,7 @@
     <string name="breathing_countdown_label">Starting soon …</string>
     <string name="breathing_round_counter">Round %1$d</string>
     <string name="breathing_vibration_label">Vibration</string>
+    <string name="breathing_how_it_works">How it works</string>
     <string name="technique_4_4_6">4-4-6</string>
     <string name="technique_box">Box</string>
     <string name="technique_4_7_8">4-7-8</string>
