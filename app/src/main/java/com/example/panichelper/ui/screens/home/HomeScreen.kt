@@ -23,6 +23,9 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,9 +35,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -51,6 +58,8 @@ import com.example.panichelper.R
 import com.example.panichelper.ui.components.PrimaryButton
 import com.example.panichelper.ui.theme.EnsoHelp
 import com.example.panichelper.ui.theme.EnsoHelpContainer
+import com.example.panichelper.util.PreferencesManager
+import kotlinx.coroutines.launch
 
 /**
  * Startbildschirm der App.
@@ -72,11 +81,40 @@ fun HomeScreen(
     onNavigateToDailyExercise: () -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
+    val context = LocalContext.current
+    val preferencesManager = remember { PreferencesManager(context) }
+    val coroutineScope = rememberCoroutineScope()
+    val audioEnabled by preferencesManager.audioEnabled.collectAsState(initial = true)
+    val hapticsEnabled by preferencesManager.hapticsEnabled.collectAsState(initial = true)
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {},
                 actions = {
+                    val mutedTint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch { preferencesManager.setAudioEnabled(!audioEnabled) }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (audioEnabled) Icons.Filled.VolumeUp else Icons.Filled.VolumeOff,
+                            contentDescription = stringResource(R.string.settings_audio_label),
+                            tint = if (audioEnabled) MaterialTheme.colorScheme.onBackground else mutedTint
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch { preferencesManager.setHapticsEnabled(!hapticsEnabled) }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Vibration,
+                            contentDescription = stringResource(R.string.settings_haptics_label),
+                            tint = if (hapticsEnabled) MaterialTheme.colorScheme.onBackground else mutedTint
+                        )
+                    }
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(
                             imageVector = Icons.Filled.Settings,

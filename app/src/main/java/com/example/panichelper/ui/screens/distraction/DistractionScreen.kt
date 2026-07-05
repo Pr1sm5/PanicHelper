@@ -28,6 +28,9 @@ import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,6 +42,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
@@ -54,8 +64,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.panichelper.R
+import com.example.panichelper.audio.SoundPlayer
 import com.example.panichelper.data.DistractionContent
 import com.example.panichelper.ui.components.PrimaryButton
+import com.example.panichelper.util.PreferencesManager
+import kotlinx.coroutines.launch
 
 /**
  * Screen für die Ablenkungsfunktion.
@@ -79,6 +92,27 @@ fun DistractionScreen(
 ) {
     val content = viewModel.currentContent
     val haptics = LocalHapticFeedback.current
+    val context = LocalContext.current
+    val preferencesManager = remember { PreferencesManager(context) }
+    val coroutineScope = rememberCoroutineScope()
+    val audioEnabled by preferencesManager.audioEnabled.collectAsState(initial = true)
+    val hapticsEnabled by preferencesManager.hapticsEnabled.collectAsState(initial = true)
+    val soundPlayer = remember { SoundPlayer(context, DistractionSoundCategory.entries) { audioEnabled } }
+
+    DisposableEffect(Unit) {
+        onDispose { soundPlayer.release() }
+    }
+
+    // Reagiert auf jeden neuen Inhalt (Bild oder Text-Prompt): spielt den
+    // passenden Sprach-Hinweis und gibt eine kleine, ruhige Vibration -
+    // spürbar statt aufdringlich, damit man auch ohne hinzusehen merkt,
+    // dass sich etwas geändert hat.
+    LaunchedEffect(content) {
+        soundPlayer.playForDistractionContent(content)
+        if (hapticsEnabled) {
+            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -89,6 +123,31 @@ fun DistractionScreen(
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.action_back)
+                        )
+                    }
+                },
+                actions = {
+                    val mutedTint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch { preferencesManager.setAudioEnabled(!audioEnabled) }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (audioEnabled) Icons.Filled.VolumeUp else Icons.Filled.VolumeOff,
+                            contentDescription = stringResource(R.string.settings_audio_label),
+                            tint = if (audioEnabled) MaterialTheme.colorScheme.onBackground else mutedTint
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch { preferencesManager.setHapticsEnabled(!hapticsEnabled) }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Vibration,
+                            contentDescription = stringResource(R.string.settings_haptics_label),
+                            tint = if (hapticsEnabled) MaterialTheme.colorScheme.onBackground else mutedTint
                         )
                     }
                 },
@@ -147,10 +206,7 @@ fun DistractionScreen(
                 PrimaryButton(
                     text = stringResource(R.string.distraction_next_button),
                     icon = Icons.Filled.SkipNext,
-                    onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        viewModel.showNextContent()
-                    },
+                    onClick = { viewModel.showNextContent() },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -163,10 +219,7 @@ fun DistractionScreen(
                 PrimaryButton(
                     text = stringResource(R.string.distraction_random_button),
                     icon = Icons.Filled.Shuffle,
-                    onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        viewModel.showRandomContent()
-                    },
+                    onClick = { viewModel.showRandomContent() },
                     modifier = Modifier.weight(1f)
                 )
             }
