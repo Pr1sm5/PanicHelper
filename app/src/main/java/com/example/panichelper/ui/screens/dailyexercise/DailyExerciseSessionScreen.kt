@@ -26,11 +26,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.panichelper.R
 import com.example.panichelper.data.RoutineProgress
 import com.example.panichelper.ui.components.AnimatedBreathingCircle
 import com.example.panichelper.ui.components.BreathingCircleDefaults
@@ -110,12 +112,12 @@ fun DailyExerciseSessionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tägliche Übung") },
+                title = { Text(stringResource(R.string.nav_daily_exercise)) },
                 navigationIcon = {
                     IconButton(onClick = onFinish) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Zurück"
+                            contentDescription = stringResource(R.string.action_back)
                         )
                     }
                 },
@@ -143,7 +145,7 @@ fun DailyExerciseSessionScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Folge dem Kreis mit deinem Atem",
+                    text = stringResource(R.string.breathing_instruction),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -165,7 +167,11 @@ fun DailyExerciseSessionScreen(
                 }
 
                 Text(
-                    text = if (isCountingDown) "Gleich geht's los …" else phase.label,
+                    text = if (isCountingDown) {
+                        stringResource(R.string.breathing_countdown_label)
+                    } else {
+                        stringResource(phase.labelRes)
+                    },
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -193,7 +199,7 @@ private fun CompletionContent(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Übung abgeschlossen 🎉",
+            text = stringResource(R.string.daily_exercise_completed_title),
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center
@@ -201,7 +207,7 @@ private fun CompletionContent(
 
         if (progress != null) {
             Text(
-                text = "🔥 ${progress.currentStreak} Tage in Folge",
+                text = stringResource(R.string.daily_exercise_streak_active, progress.currentStreak),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 16.dp, bottom = 40.dp)
@@ -209,7 +215,7 @@ private fun CompletionContent(
         }
 
         PrimaryButton(
-            text = "Fertig",
+            text = stringResource(R.string.action_done),
             onClick = onFinish
         )
     }

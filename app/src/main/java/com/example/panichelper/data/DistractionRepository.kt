@@ -5,18 +5,26 @@ import com.example.panichelper.R
 
 /**
  * Repräsentiert einen einzelnen Ablenkungs-Inhalt.
- * Es gibt zwei Varianten:
- * - ImageContent: Bild + Beobachtungsfrage darunter.
- * - TextContent: Nur ein großer Text ohne Bild (z. B. Grounding-Übungen).
+ * Es gibt drei Varianten:
+ * - ImageContent: Bild + Beobachtungsfrage darunter (Frage per Index in ein String-Array).
+ * - ColorPromptContent: "Suche dir 5 Objekte mit der Farbe X"-Übung, Farbe per Index.
+ * - TextContent: Nur ein großer Text ohne Bild (z. B. Grounding-Übungen), Text per Index.
+ * Die eigentlichen Texte liegen als Ressourcen vor (strings.xml) und werden erst
+ * im Composable über stringResource()/stringArrayResource() aufgelöst, damit sie
+ * je nach eingestellter App-Sprache übersetzt angezeigt werden.
  */
 sealed class DistractionContent {
     data class ImageContent(
         @DrawableRes val imageRes: Int,
-        val question: String
+        val questionIndex: Int
+    ) : DistractionContent()
+
+    data class ColorPromptContent(
+        val colorIndex: Int
     ) : DistractionContent()
 
     data class TextContent(
-        val text: String
+        val promptIndex: Int
     ) : DistractionContent()
 }
 
@@ -39,47 +47,31 @@ object DistractionRepository {
         R.drawable.distraction_8
     )
 
-    // Liste der möglichen Beobachtungsfragen, die unter einem Bild erscheinen.
-    private val imageQuestions: List<String> = listOf(
-        "Welche Farbe hat das Fell?",
-        "Wie viele Ohren siehst du?",
-        "Schaue auf die Augen.",
-        "Welche Emotion vermittelt das Bild?",
-        "Zähle die Pfoten."
-    )
+    // Anzahl der Einträge in R.array.distraction_image_questions.
+    private const val IMAGE_QUESTION_COUNT = 5
 
-    // Farben für die "Suche 5 Objekte..."-Übung. Die Farbe wird bei jeder
-    // Anzeige neu zufällig gewählt, damit die Übung variiert.
-    private val groundingColors: List<String> = listOf(
-        "Rot", "Blau", "Grün", "Gelb", "Orange", "Lila", "Türkis", "Rosa"
-    )
+    // Anzahl der Einträge in R.array.distraction_grounding_colors.
+    private const val GROUNDING_COLOR_COUNT = 8
 
-    // Feste Text-Prompts ohne Bild (Grounding-Techniken).
-    // Der Farb-Prompt wird separat behandelt, da die Farbe variiert.
-    private val fixedTextPrompts: List<String> = listOf(
-        "Benennen Sie fünf Dinge, die Sie sehen.",
-        "Nehmen Sie zwei Gerüche wahr.",
-        "Hören Sie drei Geräusche in Ihrer Umgebung?",
-        "Spüren Sie vier Dinge, die Sie berühren können.",
-        "Und konzentrieren Sie sich auf eine Sache, die Sie schmecken."
-    )
+    // Anzahl der Einträge in R.array.distraction_fixed_prompts.
+    private const val FIXED_PROMPT_COUNT = 5
 
     /** Anzahl der Bilder. */
     fun imageCount(): Int = imageIds.size
 
     /**
-     * Gesamtanzahl aller Inhalte (Bilder + Text-Prompts).
-     * Reihenfolge: zuerst alle Bilder, danach alle Text-Prompts
-     * (Farb-Übung zuerst, danach die festen Prompts).
+     * Gesamtanzahl aller Inhalte (Bilder + Farb-Übung + Text-Prompts).
+     * Reihenfolge: zuerst alle Bilder, danach die Farb-Übung, danach die festen Prompts.
      */
-    fun totalContentCount(): Int = imageIds.size + 1 + fixedTextPrompts.size
+    fun totalContentCount(): Int = imageIds.size + 1 + FIXED_PROMPT_COUNT
 
     /** Gibt eine zufällige, gültige Index-Position über alle Inhalte zurück. */
     fun randomContentIndex(): Int = (0 until totalContentCount()).random()
 
     /**
      * Erzeugt den Inhalt für einen gegebenen Gesamt-Index.
-     * Bild-Indizes liefern ein neues ImageContent mit zufälliger Frage,
+     * Bild-Indizes liefern ein neues ImageContent mit zufälligem Fragen-Index,
+     * der nächste Index liefert die Farb-Übung mit zufälligem Farb-Index,
      * die restlichen Indizes liefern die Grounding-Text-Prompts.
      */
     fun getContentAt(index: Int): DistractionContent {
@@ -87,15 +79,15 @@ object DistractionRepository {
         return when {
             index < imageCount -> DistractionContent.ImageContent(
                 imageRes = imageIds[index],
-                question = imageQuestions.random()
+                questionIndex = (0 until IMAGE_QUESTION_COUNT).random()
             )
-            index == imageCount -> DistractionContent.TextContent(
-                text = "Suche dir 5 Objekte mit der Farbe ${groundingColors.random()}."
+            index == imageCount -> DistractionContent.ColorPromptContent(
+                colorIndex = (0 until GROUNDING_COLOR_COUNT).random()
             )
             else -> {
-                // index - imageCount - 1 -> Position innerhalb fixedTextPrompts
+                // index - imageCount - 1 -> Position innerhalb der festen Prompts
                 val promptIndex = index - imageCount - 1
-                DistractionContent.TextContent(text = fixedTextPrompts[promptIndex])
+                DistractionContent.TextContent(promptIndex = promptIndex)
             }
         }
     }

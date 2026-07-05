@@ -1,5 +1,7 @@
 package com.example.panichelper.data
 
+import androidx.annotation.StringRes
+import com.example.panichelper.R
 import kotlinx.serialization.Serializable
 
 /**
@@ -7,10 +9,10 @@ import kotlinx.serialization.Serializable
  * Bestimmt nur die Anzeige (Label/Chip) auf der Hilfe-Karte.
  */
 @Serializable
-enum class ContactRelationship(val label: String) {
-    FAMILY("Familie"),
-    FRIEND("Freund:in"),
-    THERAPIST("Therapeut:in")
+enum class ContactRelationship(@StringRes val labelRes: Int) {
+    FAMILY(R.string.relationship_family),
+    FRIEND(R.string.relationship_friend),
+    THERAPIST(R.string.relationship_therapist)
 }
 
 /**

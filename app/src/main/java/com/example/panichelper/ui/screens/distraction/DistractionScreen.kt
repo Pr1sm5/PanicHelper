@@ -30,9 +30,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.panichelper.R
 import com.example.panichelper.data.DistractionContent
 import com.example.panichelper.ui.components.PrimaryButton
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,12 +60,12 @@ fun DistractionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ablenkung") },
+                title = { Text(stringResource(R.string.nav_distraction)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Zurück"
+                            contentDescription = stringResource(R.string.action_back)
                         )
                     }
                 },
@@ -93,7 +96,7 @@ fun DistractionScreen(
                     ) {
                         Image(
                             painter = painterResource(id = content.imageRes),
-                            contentDescription = "Ablenkungsbild",
+                            contentDescription = stringResource(R.string.distraction_image_description),
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .size(240.dp)
@@ -101,8 +104,9 @@ fun DistractionScreen(
                         )
                     }
 
+                    val questions = stringArrayResource(R.array.distraction_image_questions)
                     Text(
-                        text = content.question,
+                        text = questions[content.questionIndex],
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
@@ -112,11 +116,28 @@ fun DistractionScreen(
                     )
                 }
 
+                is DistractionContent.ColorPromptContent -> {
+                    val colors = stringArrayResource(R.array.distraction_grounding_colors)
+                    Text(
+                        text = stringResource(
+                            R.string.distraction_color_prompt_template,
+                            colors[content.colorIndex]
+                        ),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 60.dp)
+                    )
+                }
+
                 is DistractionContent.TextContent -> {
                     // Reine Text-Übung: kein Bild, dafür ein großer,
                     // gut lesbarer Text als zentraler Fokuspunkt.
+                    val prompts = stringArrayResource(R.array.distraction_fixed_prompts)
                     Text(
-                        text = content.text,
+                        text = prompts[content.promptIndex],
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
@@ -132,7 +153,7 @@ fun DistractionScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 PrimaryButton(
-                    text = "Nächstes Bild",
+                    text = stringResource(R.string.distraction_next_button),
                     icon = Icons.Filled.SkipNext,
                     onClick = { viewModel.showNextContent() },
                     modifier = Modifier.weight(1f)
@@ -145,7 +166,7 @@ fun DistractionScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 PrimaryButton(
-                    text = "Zufälliges Bild",
+                    text = stringResource(R.string.distraction_random_button),
                     icon = Icons.Filled.Shuffle,
                     onClick = { viewModel.showRandomContent() },
                     modifier = Modifier.weight(1f)

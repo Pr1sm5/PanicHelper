@@ -13,6 +13,7 @@ import com.example.panichelper.ui.screens.dailyexercise.DailyExerciseSessionScre
 import com.example.panichelper.ui.screens.distraction.DistractionScreen
 import com.example.panichelper.ui.screens.help.HelpScreen
 import com.example.panichelper.ui.screens.home.HomeScreen
+import com.example.panichelper.ui.screens.settings.SettingsScreen
 
 /**
  * Definiert alle Routen (Screens) der App an einer zentralen Stelle.
@@ -25,6 +26,7 @@ object PanicHelperRoutes {
     const val HELP = "help"
     const val DAILY_EXERCISE = "daily_exercise"
     const val DAILY_EXERCISE_SESSION = "daily_exercise_session/{minutes}"
+    const val SETTINGS = "settings"
 
     fun dailyExerciseSession(minutes: Int) = "daily_exercise_session/$minutes"
 }
@@ -54,6 +56,9 @@ fun PanicHelperNavGraph(
                 },
                 onNavigateToDailyExercise = {
                     navController.navigate(PanicHelperRoutes.DAILY_EXERCISE)
+                },
+                onNavigateToSettings = {
+                    navController.navigate(PanicHelperRoutes.SETTINGS)
                 }
             )
         }
@@ -93,6 +98,12 @@ fun PanicHelperNavGraph(
             DailyExerciseSessionScreen(
                 minutes = minutes,
                 onFinish = { navController.popBackStack() }
+            )
+        }
+
+        composable(PanicHelperRoutes.SETTINGS) {
+            SettingsScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

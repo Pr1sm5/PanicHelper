@@ -31,9 +31,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.panichelper.R
 import com.example.panichelper.ui.components.AnimatedBreathingCircle
 import com.example.panichelper.ui.components.BreathingCircleDefaults
 import com.example.panichelper.ui.theme.BreathingDark
@@ -92,12 +94,12 @@ fun BreathingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Atemübung") },
+                title = { Text(stringResource(R.string.nav_breathing)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Zurück"
+                            contentDescription = stringResource(R.string.action_back)
                         )
                     }
                 },
@@ -115,7 +117,7 @@ fun BreathingScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Folge dem Kreis mit deinem Atem",
+                text = stringResource(R.string.breathing_instruction),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -137,13 +139,21 @@ fun BreathingScreen(
             }
 
             Text(
-                text = if (isCountingDown) "Gleich geht's los …" else phase.label,
+                text = if (isCountingDown) {
+                    stringResource(R.string.breathing_countdown_label)
+                } else {
+                    stringResource(phase.labelRes)
+                },
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                text = if (!isCountingDown && completedCycles > 0) "Runde $completedCycles" else " ",
+                text = if (!isCountingDown && completedCycles > 0) {
+                    stringResource(R.string.breathing_round_counter, completedCycles)
+                } else {
+                    " "
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp)
@@ -156,7 +166,7 @@ fun BreathingScreen(
                     FilterChip(
                         selected = technique == t,
                         onClick = { viewModel.setTechnique(t) },
-                        label = { Text(t.name) }
+                        label = { Text(stringResource(t.nameRes)) }
                     )
                 }
             }
@@ -169,7 +179,7 @@ fun BreathingScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Vibration",
+                    text = stringResource(R.string.breathing_vibration_label),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

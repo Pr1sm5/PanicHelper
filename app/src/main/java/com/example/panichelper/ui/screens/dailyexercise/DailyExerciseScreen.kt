@@ -28,8 +28,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.panichelper.R
 import com.example.panichelper.data.DailyExerciseDuration
 import com.example.panichelper.ui.components.HeaderCard
 import com.example.panichelper.ui.components.PrimaryButton
@@ -59,12 +61,12 @@ fun DailyExerciseScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tägliche Übung") },
+                title = { Text(stringResource(R.string.nav_daily_exercise)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Zurück"
+                            contentDescription = stringResource(R.string.action_back)
                         )
                     }
                 },
@@ -83,8 +85,8 @@ fun DailyExerciseScreen(
             verticalArrangement = Arrangement.Top
         ) {
             HeaderCard(
-                title = "Baue dir eine tägliche Routine auf",
-                subtitle = "Kurze, geführte Atemübungen – jeden Tag ein bisschen."
+                title = stringResource(R.string.daily_exercise_header_title),
+                subtitle = stringResource(R.string.daily_exercise_header_subtitle)
             )
 
             if (profile == null || isEditingProfile) {
@@ -107,7 +109,7 @@ fun DailyExerciseScreen(
                     ProfileAvatar(username = profile.username, colorArgb = profile.colorArgb)
                     Column(modifier = Modifier.padding(start = 16.dp)) {
                         Text(
-                            text = "Hallo, ${profile.username}!",
+                            text = stringResource(R.string.daily_exercise_greeting, profile.username),
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -115,7 +117,7 @@ fun DailyExerciseScreen(
                             onClick = { isEditingProfile = true },
                             contentPadding = PaddingValues(0.dp)
                         ) {
-                            Text("Profil bearbeiten")
+                            Text(stringResource(R.string.daily_exercise_edit_profile))
                         }
                     }
                 }
@@ -123,16 +125,16 @@ fun DailyExerciseScreen(
                 val streak = viewModel.routineProgress
                 HeaderCard(
                     title = if (streak.currentStreak > 0) {
-                        "🔥 ${streak.currentStreak} Tage in Folge"
+                        stringResource(R.string.daily_exercise_streak_active, streak.currentStreak)
                     } else {
-                        "Starte heute deine Streak"
+                        stringResource(R.string.daily_exercise_streak_empty)
                     },
-                    subtitle = "Rekord: ${streak.longestStreak} Tage",
+                    subtitle = stringResource(R.string.daily_exercise_streak_record, streak.longestStreak),
                     modifier = Modifier.padding(top = 24.dp)
                 )
 
                 Text(
-                    text = "Wähle eine Länge",
+                    text = stringResource(R.string.daily_exercise_choose_length),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
@@ -145,13 +147,13 @@ fun DailyExerciseScreen(
                         FilterChip(
                             selected = viewModel.selectedDuration == duration,
                             onClick = { viewModel.selectDuration(duration) },
-                            label = { Text(duration.label) }
+                            label = { Text(stringResource(R.string.duration_minutes_label, duration.minutes)) }
                         )
                     }
                 }
 
                 PrimaryButton(
-                    text = "Übung starten",
+                    text = stringResource(R.string.daily_exercise_start_button),
                     onClick = { onStartSession(viewModel.selectedDuration.minutes) },
                     modifier = Modifier.padding(top = 32.dp)
                 )
@@ -177,7 +179,7 @@ private fun ProfileSetupForm(
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
-            label = { Text("Dein Name") },
+            label = { Text(stringResource(R.string.daily_exercise_name_label)) },
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -185,7 +187,7 @@ private fun ProfileSetupForm(
         )
 
         Text(
-            text = "Wähle eine Farbe",
+            text = stringResource(R.string.daily_exercise_choose_color),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 12.dp)
@@ -198,7 +200,7 @@ private fun ProfileSetupForm(
         )
 
         PrimaryButton(
-            text = "Los geht's",
+            text = stringResource(R.string.daily_exercise_setup_confirm),
             onClick = { if (username.isNotBlank()) onSave(username.trim(), colorArgb) }
         )
     }

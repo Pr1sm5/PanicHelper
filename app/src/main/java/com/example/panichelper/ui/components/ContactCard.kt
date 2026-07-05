@@ -19,7 +19,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.panichelper.R
 import com.example.panichelper.data.TrustedContact
 
 /**
@@ -68,7 +70,7 @@ fun ContactCard(
                 )
                 AssistChip(
                     onClick = onEditRelationship,
-                    label = { Text(contact.relationship.label) },
+                    label = { Text(stringResource(contact.relationship.labelRes)) },
                     colors = AssistChipDefaults.assistChipColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         labelColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -79,7 +81,7 @@ fun ContactCard(
             IconButton(onClick = onCall) {
                 Icon(
                     imageVector = Icons.Filled.Phone,
-                    contentDescription = "Anrufen",
+                    contentDescription = stringResource(R.string.contact_call_description),
                     modifier = Modifier.size(28.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -88,7 +90,7 @@ fun ContactCard(
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
-                    contentDescription = "Löschen",
+                    contentDescription = stringResource(R.string.contact_delete_description),
                     tint = MaterialTheme.colorScheme.error
                 )
             }

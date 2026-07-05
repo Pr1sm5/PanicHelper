@@ -36,9 +36,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.panichelper.R
 import com.example.panichelper.data.ContactRelationship
 import com.example.panichelper.ui.components.ContactCard
 import com.example.panichelper.ui.components.HeaderCard
@@ -91,12 +93,12 @@ fun HelpScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Hilfe") },
+                title = { Text(stringResource(R.string.nav_help)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Zurück"
+                            contentDescription = stringResource(R.string.action_back)
                         )
                     }
                 },
@@ -115,13 +117,13 @@ fun HelpScreen(
             verticalArrangement = Arrangement.Top
         ) {
             HeaderCard(
-                title = "Wenn du Unterstützung brauchst,",
-                subtitle = "kannst du hier Vertrauenspersonen kontaktieren."
+                title = stringResource(R.string.help_header_title),
+                subtitle = stringResource(R.string.help_header_subtitle)
             )
 
             if (viewModel.contacts.isEmpty()) {
                 Text(
-                    text = "Noch keine Vertrauensperson gespeichert.",
+                    text = stringResource(R.string.help_empty_state),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 32.dp, bottom = 16.dp)
@@ -151,8 +153,7 @@ fun HelpScreen(
             }
 
             Text(
-                text = "Der Anruf wird nicht automatisch gestartet – " +
-                        "du entscheidest im Telefon-Dialer selbst, ob du anrufst.",
+                text = stringResource(R.string.help_call_disclaimer),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -162,7 +163,7 @@ fun HelpScreen(
             )
 
             PrimaryButton(
-                text = "Kontakt hinzufügen",
+                text = stringResource(R.string.help_add_contact_button),
                 icon = Icons.Filled.PersonAdd,
                 onClick = {
                     val pickIntent = Intent(
@@ -215,26 +216,26 @@ private fun RelationshipPickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Beziehung auswählen") },
+        title = { Text(stringResource(R.string.help_relationship_dialog_title)) },
         text = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ContactRelationship.entries.forEach { relationship ->
                     FilterChip(
                         selected = selected == relationship,
                         onClick = { selected = relationship },
-                        label = { Text(relationship.label) }
+                        label = { Text(stringResource(relationship.labelRes)) }
                     )
                 }
             }
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(selected) }) {
-                Text("Speichern")
+                Text(stringResource(R.string.action_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Abbrechen")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     )

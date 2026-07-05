@@ -1,3 +1,97 @@
 <resources>
     <string name="app_name">PanicHelper</string>
+
+    <!-- Navigation / screen titles -->
+    <string name="nav_breathing">Breathing Exercise</string>
+    <string name="nav_distraction">Distraction</string>
+    <string name="nav_help">Help</string>
+    <string name="nav_daily_exercise">Daily Exercise</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Shared actions -->
+    <string name="action_back">Back</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_done">Done</string>
+
+    <!-- Home -->
+    <string name="home_subtitle">You are not alone. Choose what could help you right now.</string>
+
+    <!-- Breathing exercise -->
+    <string name="breathing_instruction">Follow the circle with your breath</string>
+    <string name="breathing_countdown_label">Starting soon …</string>
+    <string name="breathing_round_counter">Round %1$d</string>
+    <string name="breathing_vibration_label">Vibration</string>
+    <string name="technique_4_4_6">4-4-6</string>
+    <string name="technique_box">Box</string>
+    <string name="technique_4_7_8">4-7-8</string>
+    <string name="breathing_phase_inhale">Inhale</string>
+    <string name="breathing_phase_hold">Hold</string>
+    <string name="breathing_phase_exhale">Exhale</string>
+
+    <!-- Distraction -->
+    <string name="distraction_image_description">Distraction image</string>
+    <string name="distraction_next_button">Next image</string>
+    <string name="distraction_random_button">Random image</string>
+    <string name="distraction_color_prompt_template">Find 5 objects that are %1$s.</string>
+    <string-array name="distraction_image_questions">
+        <item>What color is the fur?</item>
+        <item>How many ears do you see?</item>
+        <item>Look at the eyes.</item>
+        <item>What emotion does the picture convey?</item>
+        <item>Count the paws.</item>
+    </string-array>
+    <string-array name="distraction_grounding_colors">
+        <item>red</item>
+        <item>blue</item>
+        <item>green</item>
+        <item>yellow</item>
+        <item>orange</item>
+        <item>purple</item>
+        <item>turquoise</item>
+        <item>pink</item>
+    </string-array>
+    <string-array name="distraction_fixed_prompts">
+        <item>Name five things you can see.</item>
+        <item>Notice two smells.</item>
+        <item>Can you hear three sounds around you?</item>
+        <item>Feel four things you can touch.</item>
+        <item>And focus on one thing you can taste.</item>
+    </string-array>
+
+    <!-- Help -->
+    <string name="help_header_title">If you need support,</string>
+    <string name="help_header_subtitle">you can reach out to trusted people here.</string>
+    <string name="help_empty_state">No trusted contact saved yet.</string>
+    <string name="help_call_disclaimer">The call isn\'t started automatically – you decide in the phone dialer whether to call.</string>
+    <string name="help_add_contact_button">Add contact</string>
+    <string name="help_relationship_dialog_title">Choose a relationship</string>
+    <string name="contact_call_description">Call</string>
+    <string name="contact_delete_description">Delete</string>
+    <string name="relationship_family">Family</string>
+    <string name="relationship_friend">Friend</string>
+    <string name="relationship_therapist">Therapist</string>
+    <string name="migration_default_contact_name">Trusted contact</string>
+
+    <!-- Daily exercise -->
+    <string name="daily_exercise_header_title">Build a daily routine</string>
+    <string name="daily_exercise_header_subtitle">Short, guided breathing exercises – a little every day.</string>
+    <string name="daily_exercise_greeting">Hi, %1$s!</string>
+    <string name="daily_exercise_edit_profile">Edit profile</string>
+    <string name="daily_exercise_streak_active">🔥 %1$d day streak</string>
+    <string name="daily_exercise_streak_empty">Start your streak today</string>
+    <string name="daily_exercise_streak_record">Record: %1$d days</string>
+    <string name="daily_exercise_choose_length">Choose a length</string>
+    <string name="daily_exercise_start_button">Start exercise</string>
+    <string name="daily_exercise_name_label">Your name</string>
+    <string name="daily_exercise_choose_color">Choose a color</string>
+    <string name="daily_exercise_setup_confirm">Let\'s go</string>
+    <string name="daily_exercise_completed_title">Exercise completed 🎉</string>
+    <string name="duration_minutes_label">%1$d min</string>
+
+    <!-- Settings -->
+    <string name="settings_language_title">Language</string>
+    <string name="settings_language_subtitle">Choose the app\'s language.</string>
+    <string name="settings_language_german">Deutsch</string>
+    <string name="settings_language_english">English</string>
 </resources>

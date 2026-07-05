@@ -54,6 +54,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
     implementation("androidx.activity:activity-compose:1.9.1")
+    implementation("com.google.android.material:material:1.12.0")
+
 
     implementation(platform(libs.androidx.compose.bom))
 
@@ -80,6 +82,9 @@ dependencies {
 
     // java.time (LocalDate) auf minSdk 24 nutzbar machen (für die Streak-Berechnung)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.3")
+
+    // Per-App-Sprachumschaltung (funktioniert auch ohne AppCompatActivity)
+    implementation("androidx.appcompat:appcompat:1.7.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

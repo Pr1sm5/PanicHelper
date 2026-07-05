@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.panichelper.R
 import com.example.panichelper.data.ContactRelationship
 import com.example.panichelper.data.RoutineProgress
 import com.example.panichelper.data.TrustedContact
@@ -64,7 +65,7 @@ class PreferencesManager(private val context: Context) {
         val migrated = listOf(
             TrustedContact(
                 id = UUID.randomUUID().toString(),
-                name = "Vertrauensperson",
+                name = context.getString(R.string.migration_default_contact_name),
                 phoneNumber = legacyNumber,
                 relationship = ContactRelationship.FAMILY
             )

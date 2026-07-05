@@ -1,0 +1,97 @@
+<resources>
+    <string name="app_name">PanicHelper</string>
+
+    <!-- Navigation / Bildschirmtitel -->
+    <string name="nav_breathing">Atemübung</string>
+    <string name="nav_distraction">Ablenkung</string>
+    <string name="nav_help">Hilfe</string>
+    <string name="nav_daily_exercise">Tägliche Übung</string>
+    <string name="nav_settings">Einstellungen</string>
+
+    <!-- Geteilte Aktionen -->
+    <string name="action_back">Zurück</string>
+    <string name="action_save">Speichern</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_done">Fertig</string>
+
+    <!-- Home -->
+    <string name="home_subtitle">Du bist nicht allein. Wähle, was dir jetzt helfen könnte.</string>
+
+    <!-- Atemübung -->
+    <string name="breathing_instruction">Folge dem Kreis mit deinem Atem</string>
+    <string name="breathing_countdown_label">Gleich geht\'s los …</string>
+    <string name="breathing_round_counter">Runde %1$d</string>
+    <string name="breathing_vibration_label">Vibration</string>
+    <string name="technique_4_4_6">4-4-6</string>
+    <string name="technique_box">Box</string>
+    <string name="technique_4_7_8">4-7-8</string>
+    <string name="breathing_phase_inhale">Einatmen</string>
+    <string name="breathing_phase_hold">Halten</string>
+    <string name="breathing_phase_exhale">Ausatmen</string>
+
+    <!-- Ablenkung -->
+    <string name="distraction_image_description">Ablenkungsbild</string>
+    <string name="distraction_next_button">Nächstes Bild</string>
+    <string name="distraction_random_button">Zufälliges Bild</string>
+    <string name="distraction_color_prompt_template">Suche dir 5 Objekte mit der Farbe %1$s.</string>
+    <string-array name="distraction_image_questions">
+        <item>Welche Farbe hat das Fell?</item>
+        <item>Wie viele Ohren siehst du?</item>
+        <item>Schaue auf die Augen.</item>
+        <item>Welche Emotion vermittelt das Bild?</item>
+        <item>Zähle die Pfoten.</item>
+    </string-array>
+    <string-array name="distraction_grounding_colors">
+        <item>Rot</item>
+        <item>Blau</item>
+        <item>Grün</item>
+        <item>Gelb</item>
+        <item>Orange</item>
+        <item>Lila</item>
+        <item>Türkis</item>
+        <item>Rosa</item>
+    </string-array>
+    <string-array name="distraction_fixed_prompts">
+        <item>Benennen Sie fünf Dinge, die Sie sehen.</item>
+        <item>Nehmen Sie zwei Gerüche wahr.</item>
+        <item>Hören Sie drei Geräusche in Ihrer Umgebung?</item>
+        <item>Spüren Sie vier Dinge, die Sie berühren können.</item>
+        <item>Und konzentrieren Sie sich auf eine Sache, die Sie schmecken.</item>
+    </string-array>
+
+    <!-- Hilfe -->
+    <string name="help_header_title">Wenn du Unterstützung brauchst,</string>
+    <string name="help_header_subtitle">kannst du hier Vertrauenspersonen kontaktieren.</string>
+    <string name="help_empty_state">Noch keine Vertrauensperson gespeichert.</string>
+    <string name="help_call_disclaimer">Der Anruf wird nicht automatisch gestartet – du entscheidest im Telefon-Dialer selbst, ob du anrufst.</string>
+    <string name="help_add_contact_button">Kontakt hinzufügen</string>
+    <string name="help_relationship_dialog_title">Beziehung auswählen</string>
+    <string name="contact_call_description">Anrufen</string>
+    <string name="contact_delete_description">Löschen</string>
+    <string name="relationship_family">Familie</string>
+    <string name="relationship_friend">Freund:in</string>
+    <string name="relationship_therapist">Therapeut:in</string>
+    <string name="migration_default_contact_name">Vertrauensperson</string>
+
+    <!-- Tägliche Übung -->
+    <string name="daily_exercise_header_title">Baue dir eine tägliche Routine auf</string>
+    <string name="daily_exercise_header_subtitle">Kurze, geführte Atemübungen – jeden Tag ein bisschen.</string>
+    <string name="daily_exercise_greeting">Hallo, %1$s!</string>
+    <string name="daily_exercise_edit_profile">Profil bearbeiten</string>
+    <string name="daily_exercise_streak_active">🔥 %1$d Tage in Folge</string>
+    <string name="daily_exercise_streak_empty">Starte heute deine Streak</string>
+    <string name="daily_exercise_streak_record">Rekord: %1$d Tage</string>
+    <string name="daily_exercise_choose_length">Wähle eine Länge</string>
+    <string name="daily_exercise_start_button">Übung starten</string>
+    <string name="daily_exercise_name_label">Dein Name</string>
+    <string name="daily_exercise_choose_color">Wähle eine Farbe</string>
+    <string name="daily_exercise_setup_confirm">Los geht\'s</string>
+    <string name="daily_exercise_completed_title">Übung abgeschlossen 🎉</string>
+    <string name="duration_minutes_label">%1$d Min</string>
+
+    <!-- Einstellungen -->
+    <string name="settings_language_title">Sprache</string>
+    <string name="settings_language_subtitle">Wähle die Sprache der App.</string>
+    <string name="settings_language_german">Deutsch</string>
+    <string name="settings_language_english">English</string>
+</resources>
