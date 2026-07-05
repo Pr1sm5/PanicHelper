@@ -5,9 +5,8 @@ import com.example.panichelper.R
 
 /**
  * Repräsentiert einen einzelnen Ablenkungs-Inhalt.
- * Es gibt drei Varianten:
+ * Es gibt zwei Varianten:
  * - ImageContent: Bild + Beobachtungsfrage darunter (Frage per Index in ein String-Array).
- * - ColorPromptContent: "Suche dir 5 Objekte mit der Farbe X"-Übung, Farbe per Index.
  * - TextContent: Nur ein großer Text ohne Bild (z. B. Grounding-Übungen), Text per Index.
  * Die eigentlichen Texte liegen als Ressourcen vor (strings.xml) und werden erst
  * im Composable über stringResource()/stringArrayResource() aufgelöst, damit sie
@@ -17,10 +16,6 @@ sealed class DistractionContent {
     data class ImageContent(
         @DrawableRes val imageRes: Int,
         val questionIndex: Int
-    ) : DistractionContent()
-
-    data class ColorPromptContent(
-        val colorIndex: Int
     ) : DistractionContent()
 
     data class TextContent(
@@ -44,14 +39,14 @@ object DistractionRepository {
         R.drawable.distraction_5,
         R.drawable.distraction_6,
         R.drawable.distraction_7,
-        R.drawable.distraction_8
+        R.drawable.distraction_8,
+        R.drawable.distraction_9,
+        R.drawable.distraction_10,
+        R.drawable.distraction_11
     )
 
     // Anzahl der Einträge in R.array.distraction_image_questions.
     private const val IMAGE_QUESTION_COUNT = 5
-
-    // Anzahl der Einträge in R.array.distraction_grounding_colors.
-    private const val GROUNDING_COLOR_COUNT = 8
 
     // Anzahl der Einträge in R.array.distraction_fixed_prompts.
     private const val FIXED_PROMPT_COUNT = 5
@@ -60,10 +55,12 @@ object DistractionRepository {
     fun imageCount(): Int = imageIds.size
 
     /**
-     * Gesamtanzahl aller Inhalte (Bilder + Farb-Übung + Text-Prompts).
-     * Reihenfolge: zuerst alle Bilder, danach die Farb-Übung, danach die festen Prompts.
+     * Gesamtanzahl aller Inhalte (Bilder + Text-Prompts).
+     * Reihenfolge: zuerst alle Bilder, danach die festen Text-Prompts.
+     * WICHTIG: Hier darf keine zusätzliche "+1" mehr stehen - die Farb-Übung
+     * wurde entfernt, es gibt keinen Extra-Slot mehr in der Rotation.
      */
-    fun totalContentCount(): Int = imageIds.size + 1 + FIXED_PROMPT_COUNT
+    fun totalContentCount(): Int = imageIds.size + FIXED_PROMPT_COUNT
 
     /** Gibt eine zufällige, gültige Index-Position über alle Inhalte zurück. */
     fun randomContentIndex(): Int = (0 until totalContentCount()).random()
@@ -71,7 +68,6 @@ object DistractionRepository {
     /**
      * Erzeugt den Inhalt für einen gegebenen Gesamt-Index.
      * Bild-Indizes liefern ein neues ImageContent mit zufälligem Fragen-Index,
-     * der nächste Index liefert die Farb-Übung mit zufälligem Farb-Index,
      * die restlichen Indizes liefern die Grounding-Text-Prompts.
      */
     fun getContentAt(index: Int): DistractionContent {
@@ -81,12 +77,10 @@ object DistractionRepository {
                 imageRes = imageIds[index],
                 questionIndex = (0 until IMAGE_QUESTION_COUNT).random()
             )
-            index == imageCount -> DistractionContent.ColorPromptContent(
-                colorIndex = (0 until GROUNDING_COLOR_COUNT).random()
-            )
             else -> {
-                // index - imageCount - 1 -> Position innerhalb der festen Prompts
-                val promptIndex = index - imageCount - 1
+                // index - imageCount -> Position innerhalb der festen Prompts
+                // (KEIN "- 1" mehr, da es keinen Farb-Slot mehr gibt).
+                val promptIndex = index - imageCount
                 DistractionContent.TextContent(promptIndex = promptIndex)
             }
         }

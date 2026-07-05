@@ -40,7 +40,6 @@
     <string name="distraction_image_description">Ablenkungsbild</string>
     <string name="distraction_next_button">Nächstes Bild</string>
     <string name="distraction_random_button">Zufälliges Bild</string>
-    <string name="distraction_color_prompt_template">Suche dir 5 Objekte mit der Farbe %1$s.</string>
     <string-array name="distraction_image_questions">
         <item>Welche Farbe hat das Fell?</item>
         <item>Wie viele Ohren siehst du?</item>
@@ -48,16 +47,7 @@
         <item>Welche Emotion vermittelt das Bild?</item>
         <item>Zähle die Pfoten.</item>
     </string-array>
-    <string-array name="distraction_grounding_colors">
-        <item>Rot</item>
-        <item>Blau</item>
-        <item>Grün</item>
-        <item>Gelb</item>
-        <item>Orange</item>
-        <item>Lila</item>
-        <item>Türkis</item>
-        <item>Rosa</item>
-    </string-array>
+
     <string-array name="distraction_fixed_prompts">
         <item>Benennen Sie fünf Dinge, die Sie sehen.</item>
         <item>Nehmen Sie zwei Gerüche wahr.</item>
