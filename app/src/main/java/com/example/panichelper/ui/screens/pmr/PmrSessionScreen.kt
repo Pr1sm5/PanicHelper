@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Vibration
@@ -45,6 +46,7 @@ import com.example.panichelper.audio.SoundPlayer
 import com.example.panichelper.ui.components.AnimatedBreathingCircle
 import com.example.panichelper.ui.components.BreathingCircleDefaults
 import com.example.panichelper.ui.components.RoutineCompletionContent
+import com.example.panichelper.ui.screens.breathing.BreathingSoundCategory
 import com.example.panichelper.ui.theme.BreathingDark
 import com.example.panichelper.ui.theme.BreathingLight
 import com.example.panichelper.util.PreferencesManager
@@ -57,9 +59,11 @@ import kotlinx.coroutines.launch
  * groß = loslassen), läuft aber automatisch nach [minutes] Minuten aus und
  * trägt den Abschluss in dieselbe Routine-Statistik ein.
  *
- * Es gibt (noch) keine eigenen Sprach-Hinweise für PMR, daher läuft nur die
- * Hintergrundmusik; ein kurzer, ruhiger Vibrations-Tick markiert stattdessen
- * jeden Phasenwechsel.
+ * Es gibt (noch) keine PMR-spezifischen Anspannen-/Loslassen-Sprach-Hinweise,
+ * aber Start- und Ende-Ton sowie die "Constructive"-Zeilen während des
+ * Loslassens sind allgemeine, wiederverwendete Hinweise aus dem gemeinsamen
+ * Sound-Set. Ein kurzer, ruhiger Vibrations-Tick markiert zusätzlich jeden
+ * Phasenwechsel.
  *
  * @param minutes Länge der Sitzung in Minuten (aus dem Navigations-Argument).
  * @param onFinish Callback zum Zurücknavigieren zur Übersicht (Abbruch oder Abschluss).
@@ -88,10 +92,19 @@ fun PmrSessionScreen(
     val coroutineScope = rememberCoroutineScope()
     val audioEnabled by preferencesManager.audioEnabled.collectAsState(initial = true)
     val hapticsEnabled by preferencesManager.hapticsEnabled.collectAsState(initial = true)
-    val soundPlayer = remember { SoundPlayer(context) { audioEnabled } }
+    val soundPlayer = remember {
+        SoundPlayer(
+            context,
+            listOf(BreathingSoundCategory.START, BreathingSoundCategory.END, BreathingSoundCategory.CONSTRUCTIVE)
+        ) { audioEnabled }
+    }
 
     DisposableEffect(Unit) {
         onDispose { soundPlayer.release() }
+    }
+
+    LaunchedEffect(Unit) {
+        soundPlayer.play(BreathingSoundCategory.START)
     }
 
     LaunchedEffect(audioEnabled, isCompleted) {
@@ -102,12 +115,22 @@ fun PmrSessionScreen(
         }
     }
 
-    // Kein spezifischer PMR-Sprach-Hinweis vorhanden - ein kleiner, ruhiger
-    // Vibrations-Tick markiert stattdessen jeden Wechsel zwischen Anspannen
-    // und Loslassen.
+    // Kein spezifischer PMR-Sprach-Hinweis für Anspannen/Loslassen vorhanden -
+    // ein kleiner, ruhiger Vibrations-Tick markiert stattdessen jeden
+    // Phasenwechsel. Gelegentlich kommt während des Loslassens zusätzlich
+    // eine "Constructive"-Zeile dazu (siehe playForPmrPhase).
     LaunchedEffect(phase, isCountingDown, isCompleted) {
-        if (!isCompleted && !isCountingDown && hapticsEnabled) {
-            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        if (!isCompleted && !isCountingDown) {
+            if (hapticsEnabled) {
+                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            }
+            soundPlayer.playForPmrPhase(phase)
+        }
+    }
+
+    LaunchedEffect(isCompleted) {
+        if (isCompleted) {
+            soundPlayer.play(BreathingSoundCategory.END)
         }
     }
 
@@ -146,10 +169,14 @@ fun PmrSessionScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.nav_pmr)) },
                 navigationIcon = {
-                    IconButton(onClick = onFinish) {
+                    IconButton(
+                        onClick = onFinish,
+                        modifier = Modifier.size(ACTION_BUTTON_SIZE)
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back)
+                            contentDescription = stringResource(R.string.action_back),
+                            modifier = Modifier.size(ACTION_ICON_SIZE)
                         )
                     }
                 },
@@ -158,23 +185,27 @@ fun PmrSessionScreen(
                     IconButton(
                         onClick = {
                             coroutineScope.launch { preferencesManager.setAudioEnabled(!audioEnabled) }
-                        }
+                        },
+                        modifier = Modifier.size(ACTION_BUTTON_SIZE)
                     ) {
                         Icon(
                             imageVector = if (audioEnabled) Icons.Filled.VolumeUp else Icons.Filled.VolumeOff,
                             contentDescription = stringResource(R.string.settings_audio_label),
-                            tint = if (audioEnabled) MaterialTheme.colorScheme.onBackground else mutedTint
+                            tint = if (audioEnabled) MaterialTheme.colorScheme.onBackground else mutedTint,
+                            modifier = Modifier.size(ACTION_ICON_SIZE)
                         )
                     }
                     IconButton(
                         onClick = {
                             coroutineScope.launch { preferencesManager.setHapticsEnabled(!hapticsEnabled) }
-                        }
+                        },
+                        modifier = Modifier.size(ACTION_BUTTON_SIZE)
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Vibration,
                             contentDescription = stringResource(R.string.settings_haptics_label),
-                            tint = if (hapticsEnabled) MaterialTheme.colorScheme.onBackground else mutedTint
+                            tint = if (hapticsEnabled) MaterialTheme.colorScheme.onBackground else mutedTint,
+                            modifier = Modifier.size(ACTION_ICON_SIZE)
                         )
                     }
                 },
@@ -248,3 +279,9 @@ fun PmrSessionScreen(
         }
     }
 }
+
+// Größer als die Material-Standardwerte (48dp Button/24dp Icon), damit die
+// Bedienelemente während einer Übung - wenn man ggf. gestresst ist - auf den
+// ersten Blick gut erkennbar und leicht zu treffen sind.
+private val ACTION_BUTTON_SIZE = 52.dp
+private val ACTION_ICON_SIZE = 28.dp

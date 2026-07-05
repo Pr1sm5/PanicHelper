@@ -23,6 +23,11 @@ val EnsoHelp = Color(0xFFB98B88)
 val EnsoHelpContainer = Color(0xFF2A1F1F)
 val EnsoOutline = Color(0xFF3A4C47)
 
+// Leicht gelblicher Akzent für den geführten Komplett-Durchlauf, bewusst
+// gedeckt statt grell (kein Alarm-Gelb), passend zum ruhigen Farbsystem.
+val EnsoGuided = Color(0xFFD9C36A)
+val EnsoGuidedContainer = Color(0xFF332C16)
+
 val BreathingLight = EnsoSageStrong
 val BreathingDark = EnsoSageDim
 val SoftError = EnsoHelp

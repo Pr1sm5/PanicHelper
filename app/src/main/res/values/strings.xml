@@ -112,6 +112,12 @@
     <string name="pmr_group_legs">legs</string>
     <string name="pmr_group_feet">feet</string>
 
+    <!-- Guided session (all three exercises back to back) -->
+    <string name="home_guided_session_button">Guided Session</string>
+    <string name="nav_guided_session">Guided Session</string>
+    <string name="guided_session_transition_message">Take a moment. Grounding is next.</string>
+    <string name="guided_session_distraction_step">Grounding %1$d of %2$d</string>
+
     <!-- Settings -->
     <string name="settings_language_title">Language</string>
     <string name="settings_language_subtitle">Choose the app\'s language.</string>

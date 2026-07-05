@@ -102,6 +102,6 @@ class PmrSessionViewModel(
     }
 
     companion object {
-        private const val COUNTDOWN_START = 3
+        private const val COUNTDOWN_START = 5
     }
 }

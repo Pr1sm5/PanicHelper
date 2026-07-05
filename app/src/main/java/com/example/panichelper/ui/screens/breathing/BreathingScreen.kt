@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Vibration
@@ -138,10 +139,14 @@ fun BreathingScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.nav_breathing)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.size(ACTION_BUTTON_SIZE)
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back)
+                            contentDescription = stringResource(R.string.action_back),
+                            modifier = Modifier.size(ACTION_ICON_SIZE)
                         )
                     }
                 },
@@ -150,23 +155,27 @@ fun BreathingScreen(
                     IconButton(
                         onClick = {
                             coroutineScope.launch { preferencesManager.setAudioEnabled(!audioEnabled) }
-                        }
+                        },
+                        modifier = Modifier.size(ACTION_BUTTON_SIZE)
                     ) {
                         Icon(
                             imageVector = if (audioEnabled) Icons.Filled.VolumeUp else Icons.Filled.VolumeOff,
                             contentDescription = stringResource(R.string.settings_audio_label),
-                            tint = if (audioEnabled) MaterialTheme.colorScheme.onBackground else mutedTint
+                            tint = if (audioEnabled) MaterialTheme.colorScheme.onBackground else mutedTint,
+                            modifier = Modifier.size(ACTION_ICON_SIZE)
                         )
                     }
                     IconButton(
                         onClick = {
                             coroutineScope.launch { preferencesManager.setHapticsEnabled(!hapticsEnabled) }
-                        }
+                        },
+                        modifier = Modifier.size(ACTION_BUTTON_SIZE)
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Vibration,
                             contentDescription = stringResource(R.string.settings_haptics_label),
-                            tint = if (hapticsEnabled) MaterialTheme.colorScheme.onBackground else mutedTint
+                            tint = if (hapticsEnabled) MaterialTheme.colorScheme.onBackground else mutedTint,
+                            modifier = Modifier.size(ACTION_ICON_SIZE)
                         )
                     }
                 },
@@ -299,3 +308,9 @@ fun BreathingScreen(
         }
     }
 }
+
+// Größer als die Material-Standardwerte (48dp Button/24dp Icon), damit die
+// Bedienelemente während einer Übung - wenn man ggf. gestresst ist - auf den
+// ersten Blick gut erkennbar und leicht zu treffen sind.
+private val ACTION_BUTTON_SIZE = 52.dp
+private val ACTION_ICON_SIZE = 28.dp

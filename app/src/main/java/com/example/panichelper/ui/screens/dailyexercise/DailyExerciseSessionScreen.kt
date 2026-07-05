@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Vibration
@@ -22,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -115,9 +117,11 @@ fun DailyExerciseSessionScreen(
         }
     }
 
-    DisposableEffect(phase, isCompleted, isCountingDown, hapticsEnabled) {
+    val vibrationIntensity = viewModel.vibrationIntensity
+
+    DisposableEffect(phase, isCompleted, isCountingDown, hapticsEnabled, vibrationIntensity) {
         if (!isCompleted && !isCountingDown && hapticsEnabled) {
-            triggerBreathingHaptic(context, phase.visualState, phase.durationMillis, 0.7f)
+            triggerBreathingHaptic(context, phase.visualState, phase.durationMillis, vibrationIntensity)
         }
         onDispose { cancelBreathingHaptic(context) }
     }
@@ -169,10 +173,14 @@ fun DailyExerciseSessionScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.nav_daily_exercise)) },
                 navigationIcon = {
-                    IconButton(onClick = onFinish) {
+                    IconButton(
+                        onClick = onFinish,
+                        modifier = Modifier.size(ACTION_BUTTON_SIZE)
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back)
+                            contentDescription = stringResource(R.string.action_back),
+                            modifier = Modifier.size(ACTION_ICON_SIZE)
                         )
                     }
                 },
@@ -181,23 +189,27 @@ fun DailyExerciseSessionScreen(
                     IconButton(
                         onClick = {
                             coroutineScope.launch { preferencesManager.setAudioEnabled(!audioEnabled) }
-                        }
+                        },
+                        modifier = Modifier.size(ACTION_BUTTON_SIZE)
                     ) {
                         Icon(
                             imageVector = if (audioEnabled) Icons.Filled.VolumeUp else Icons.Filled.VolumeOff,
                             contentDescription = stringResource(R.string.settings_audio_label),
-                            tint = if (audioEnabled) MaterialTheme.colorScheme.onBackground else mutedTint
+                            tint = if (audioEnabled) MaterialTheme.colorScheme.onBackground else mutedTint,
+                            modifier = Modifier.size(ACTION_ICON_SIZE)
                         )
                     }
                     IconButton(
                         onClick = {
                             coroutineScope.launch { preferencesManager.setHapticsEnabled(!hapticsEnabled) }
-                        }
+                        },
+                        modifier = Modifier.size(ACTION_BUTTON_SIZE)
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Vibration,
                             contentDescription = stringResource(R.string.settings_haptics_label),
-                            tint = if (hapticsEnabled) MaterialTheme.colorScheme.onBackground else mutedTint
+                            tint = if (hapticsEnabled) MaterialTheme.colorScheme.onBackground else mutedTint,
+                            modifier = Modifier.size(ACTION_ICON_SIZE)
                         )
                     }
                 },
@@ -297,9 +309,33 @@ fun DailyExerciseSessionScreen(
                     text = if (isCountingDown) " " else formatRemainingTime(viewModel.remainingMillis),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
+                    modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
                 )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.breathing_vibration_label),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Slider(
+                        value = vibrationIntensity,
+                        onValueChange = { viewModel.updateVibrationIntensity(it) },
+                        valueRange = 0.1f..1f,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }
 }
+
+// Größer als die Material-Standardwerte (48dp Button/24dp Icon), damit die
+// Bedienelemente während einer Übung - wenn man ggf. gestresst ist - auf den
+// ersten Blick gut erkennbar und leicht zu treffen sind.
+private val ACTION_BUTTON_SIZE = 52.dp
+private val ACTION_ICON_SIZE = 28.dp

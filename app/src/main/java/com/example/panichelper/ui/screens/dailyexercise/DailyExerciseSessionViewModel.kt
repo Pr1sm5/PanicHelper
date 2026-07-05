@@ -50,6 +50,9 @@ class DailyExerciseSessionViewModel(
     var updatedProgress by mutableStateOf<RoutineProgress?>(null)
         private set
 
+    var vibrationIntensity by mutableStateOf(0.7f)
+        private set
+
     // Kurzer Countdown vor dem Start, damit der Kreis nicht sofort ausgedehnt
     // erscheint, sondern klein beginnt und dann wächst. Läuft außerhalb der
     // eigentlichen Sitzungsdauer, zählt also nicht von totalDurationMillis ab.
@@ -104,6 +107,10 @@ class DailyExerciseSessionViewModel(
         }
     }
 
+    fun updateVibrationIntensity(intensity: Float) {
+        vibrationIntensity = intensity
+    }
+
     private suspend fun finishSession() {
         phaseJob?.cancel()
         updatedProgress = preferencesManager.recordDailyExerciseCompletion()
@@ -116,6 +123,6 @@ class DailyExerciseSessionViewModel(
     }
 
     companion object {
-        private const val COUNTDOWN_START = 3
+        private const val COUNTDOWN_START = 5
     }
 }
