@@ -5,38 +5,41 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.example.panichelper.data.DistractionContent
 import com.example.panichelper.data.DistractionRepository
 
 /**
- * Verwaltet den Zustand des DistractionScreens:
- * aktuelles Bild (per Index) und die aktuell angezeigte Beobachtungsfrage.
+ * Verwaltet den Zustand des DistractionScreens.
+ * Rotiert sowohl durch Bilder (mit Beobachtungsfrage) als auch durch
+ * reine Text-Prompts (Grounding-Übungen ohne Bild).
  */
 class DistractionViewModel : ViewModel() {
 
-    // Index des aktuell angezeigten Bildes innerhalb der Repository-Liste.
-    var currentImageIndex by mutableIntStateOf(0)
-        private set
+    // Aktueller Gesamt-Index über alle Inhalte (Bilder + Text-Prompts).
+    private var currentIndex by mutableIntStateOf(0)
 
-    // Aktuell angezeigte Beobachtungsfrage unter dem Bild.
-    var currentQuestion by mutableStateOf(DistractionRepository.randomQuestion())
+    // Aktuell angezeigter Inhalt, wird bei jedem Wechsel neu erzeugt.
+    var currentContent: DistractionContent by mutableStateOf(
+        DistractionRepository.getContentAt(0)
+    )
         private set
 
     /**
-     * Wechselt zum nächsten Bild in der Liste (zyklisch) und
-     * wählt eine neue zufällige Beobachtungsfrage.
+     * Wechselt zum nächsten Inhalt in der Reihenfolge (zyklisch durch
+     * Bilder und Text-Prompts hinweg).
      */
-    fun showNextImage() {
-        val nextIndex = (currentImageIndex + 1) % DistractionRepository.imageCount()
-        currentImageIndex = nextIndex
-        currentQuestion = DistractionRepository.randomQuestion()
+    fun showNextContent() {
+        val nextIndex = (currentIndex + 1) % DistractionRepository.totalContentCount()
+        currentIndex = nextIndex
+        currentContent = DistractionRepository.getContentAt(nextIndex)
     }
 
     /**
-     * Wechselt zu einem zufälligen Bild aus der Liste und
-     * wählt eine neue zufällige Beobachtungsfrage.
+     * Wechselt zu einem zufälligen Inhalt (Bild oder Text-Prompt).
      */
-    fun showRandomImage() {
-        currentImageIndex = DistractionRepository.randomImageIndex()
-        currentQuestion = DistractionRepository.randomQuestion()
+    fun showRandomContent() {
+        val randomIndex = DistractionRepository.randomContentIndex()
+        currentIndex = randomIndex
+        currentContent = DistractionRepository.getContentAt(randomIndex)
     }
 }
