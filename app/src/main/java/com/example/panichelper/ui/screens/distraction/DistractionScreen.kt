@@ -186,11 +186,7 @@ private fun ContentTypeBadge(content: DistractionContent) {
             MaterialTheme.colorScheme.primaryContainer,
             MaterialTheme.colorScheme.onPrimaryContainer
         )
-        is DistractionContent.ColorPromptContent -> Triple(
-            Icons.Filled.Palette,
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.colorScheme.onSecondaryContainer
-        )
+
         is DistractionContent.TextContent -> Triple(
             Icons.Filled.SelfImprovement,
             MaterialTheme.colorScheme.surfaceVariant,
@@ -253,21 +249,7 @@ private fun DistractionContentBody(animatedContent: DistractionContent) {
             }
         }
 
-        is DistractionContent.ColorPromptContent -> {
-            val colors = stringArrayResource(R.array.distraction_grounding_colors)
-            Text(
-                text = stringResource(
-                    R.string.distraction_color_prompt_template,
-                    colors[animatedContent.colorIndex]
-                ),
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 40.dp)
-            )
-        }
+
 
         is DistractionContent.TextContent -> {
             val prompts = stringArrayResource(R.array.distraction_fixed_prompts)
