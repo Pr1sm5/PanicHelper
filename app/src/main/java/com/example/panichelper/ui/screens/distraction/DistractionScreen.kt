@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.panichelper.data.DistractionRepository
 import com.example.panichelper.ui.components.PrimaryButton
+import androidx.compose.ui.layout.ContentScale
 
 /**
  * Screen für die Ablenkungsfunktion.
@@ -90,6 +91,7 @@ fun DistractionScreen(
                 Image(
                     painter = painterResource(id = imageRes),
                     contentDescription = "Ablenkungsbild",
+                    contentScale = ContentScale.Crop, // schneidet sauber zu, statt zu verzerren
                     modifier = Modifier
                         .size(240.dp)
                         .clip(RoundedCornerShape(28.dp))

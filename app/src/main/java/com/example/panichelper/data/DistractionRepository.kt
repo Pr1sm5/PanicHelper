@@ -22,7 +22,11 @@ object DistractionRepository {
         R.drawable.distraction_1,
         R.drawable.distraction_2,
         R.drawable.distraction_3,
-        R.drawable.distraction_4
+        R.drawable.distraction_4,
+        R.drawable.distraction_5,
+        R.drawable.distraction_6,
+        R.drawable.distraction_7,
+        R.drawable.distraction_8
     )
 
     // Liste der möglichen Beobachtungsfragen, die unter einem Bild erscheinen.
