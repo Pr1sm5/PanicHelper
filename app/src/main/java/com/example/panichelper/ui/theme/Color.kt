@@ -2,46 +2,38 @@ package com.example.panichelper.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ---------------------------------------------------------------------------
-// Farbpalette für PanicHelper
-// Bewusst ruhig gehalten: Weiß, Hellblau, Türkis, dezente Grautöne.
-// Keine aggressiven / grellen Farben, um Beruhigung zu unterstützen.
-// ---------------------------------------------------------------------------
+// Ruhiges Ensō-Farbsystem: dunkel, kühl, hoher Kontrast, keine grellen Alarmfarben.
+val EnsoBackground = Color(0xFF101817)
+val EnsoBackgroundDeep = Color(0xFF0A0F0E)
+val EnsoSurface = Color(0xFF17211F)
+val EnsoSurfaceSoft = Color(0xFF1E2A27)
+val EnsoCard = Color(0xFF202D2A)
+val EnsoCardBorder = Color(0xFF31433F)
 
-// Primärfarben (Türkis-Töne)
-val TurquoisePrimary = Color(0xFF4FB3AC)
-val TurquoiseDark = Color(0xFF2E8B85)
-val TurquoiseLight = Color(0xFFB2DFDB)
+val EnsoSage = Color(0xFF98BFAF)
+val EnsoSageStrong = Color(0xFFB9D8CA)
+val EnsoSageDim = Color(0xFF5F8075)
+val EnsoBlueGray = Color(0xFF8FA7AE)
 
-// Sekundärfarben (Hellblau-Töne)
-val SkyBlue = Color(0xFF90CAF9)
-val SkyBlueLight = Color(0xFFE3F2FD)
-val SkyBlueDark = Color(0xFF5C99C6)
+val EnsoTextPrimary = Color(0xFFF2F5F0)
+val EnsoTextSecondary = Color(0xFFC0CCC6)
+val EnsoTextMuted = Color(0xFF83918C)
 
-// Neutrale Töne
-val White = Color(0xFFFFFFFF)
-val OffWhite = Color(0xFFF7FAFA)
-val GraySoft = Color(0xFFECEFF1)
-val GrayMedium = Color(0xFFB0BEC5)
-val GrayDark = Color(0xFF546E7A)
-val TextPrimary = Color(0xFF37474F)
-val TextSecondary = Color(0xFF78909C)
+val EnsoHelp = Color(0xFFB98B88)
+val EnsoHelpContainer = Color(0xFF2A1F1F)
+val EnsoOutline = Color(0xFF3A4C47)
 
-// Atemübung – Farbverlauf während der Animation (hell -> dunkel)
-val BreathingLight = Color(0xFFB2EBF2)
-val BreathingDark = Color(0xFF26A69A)
+val BreathingLight = EnsoSageStrong
+val BreathingDark = EnsoSageDim
+val SoftError = EnsoHelp
 
-// Fehler-/Hinweisfarbe (dezent, nicht aggressiv)
-val SoftError = Color(0xFFE57373)
-
-// Auswählbare Akzentfarben für das lokale Profil im täglichen Übungsmodus.
 val ProfileColorPalette = listOf(
-    Color(0xFFEF5350),
-    Color(0xFFAB47BC),
-    Color(0xFF5C6BC0),
-    Color(0xFF29B6F6),
-    Color(0xFF66BB6A),
-    Color(0xFFFFCA28),
-    Color(0xFFFF7043),
-    Color(0xFF8D6E63)
+    EnsoSage,
+    EnsoBlueGray,
+    Color(0xFFA9B99C),
+    Color(0xFF91A8BD),
+    Color(0xFFB8A98D),
+    Color(0xFFA58FA8),
+    Color(0xFF87A79A),
+    Color(0xFF9AADA7)
 )
