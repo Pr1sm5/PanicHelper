@@ -1,12 +1,20 @@
 package com.example.panichelper.ui.screens.home
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -24,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -31,6 +40,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -142,7 +152,7 @@ private fun HomeHeroCard() {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        EnsoMark(modifier = Modifier.size(240.dp))
+        EnsoMark(modifier = Modifier.size(300.dp))
 
         Text(
             text = stringResource(R.string.home_tagline),
@@ -160,6 +170,19 @@ private fun EnsoMark(modifier: Modifier = Modifier) {
     val muted = MaterialTheme.colorScheme.outline
     val text = MaterialTheme.colorScheme.onBackground
 
+    // Dieselbe ruhige, sehr langsame Gegenrotation wie beim Atem-Kreis
+    // (AnimatedBreathingCircle) – kaum wahrnehmbar, aber nie ganz still.
+    val infiniteTransition = rememberInfiniteTransition(label = "homeEnsoRotation")
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 80000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "homeEnsoRotationAngle"
+    )
+
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val stroke = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
@@ -167,33 +190,39 @@ private fun EnsoMark(modifier: Modifier = Modifier) {
             val padding = 9.dp.toPx()
             val diameter = size.minDimension - padding * 2
             val topLeft = Offset((size.width - diameter) / 2f, (size.height - diameter) / 2f)
+            val innerTopLeft = Offset(topLeft.x + 19.dp.toPx(), topLeft.y + 19.dp.toPx())
+            val innerDiameter = diameter - 38.dp.toPx()
 
-            drawArc(
-                color = primary,
-                startAngle = -22f,
-                sweepAngle = 318f,
-                useCenter = false,
-                topLeft = topLeft,
-                size = Size(diameter, diameter),
-                style = stroke,
-                alpha = 0.95f
-            )
-            drawArc(
-                color = muted,
-                startAngle = 128f,
-                sweepAngle = 245f,
-                useCenter = false,
-                topLeft = Offset(topLeft.x + 19.dp.toPx(), topLeft.y + 19.dp.toPx()),
-                size = Size(diameter - 38.dp.toPx(), diameter - 38.dp.toPx()),
-                style = softStroke,
-                alpha = 0.65f
-            )
+            rotate(rotation) {
+                drawArc(
+                    color = primary,
+                    startAngle = -22f,
+                    sweepAngle = 318f,
+                    useCenter = false,
+                    topLeft = topLeft,
+                    size = Size(diameter, diameter),
+                    style = stroke,
+                    alpha = 0.95f
+                )
+            }
+            rotate(-rotation) {
+                drawArc(
+                    color = muted,
+                    startAngle = 128f,
+                    sweepAngle = 245f,
+                    useCenter = false,
+                    topLeft = innerTopLeft,
+                    size = Size(innerDiameter, innerDiameter),
+                    style = softStroke,
+                    alpha = 0.65f
+                )
+            }
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = stringResource(R.string.home_enso_kanji),
-                style = MaterialTheme.typography.titleLarge.copy(letterSpacing = 4.sp),
+                style = MaterialTheme.typography.titleLarge.copy(letterSpacing = 4.sp, fontSize = 30.sp),
                 color = primary,
                 textAlign = TextAlign.Center
             )
@@ -202,7 +231,8 @@ private fun EnsoMark(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontFamily = FontFamily.Serif,
                     fontStyle = FontStyle.Italic,
-                    fontWeight = FontWeight.Normal
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 30.sp
                 ),
                 color = text,
                 textAlign = TextAlign.Center,

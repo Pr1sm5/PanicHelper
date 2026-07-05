@@ -35,6 +35,12 @@ class DailyExerciseSessionViewModel(
     var currentPhase by mutableStateOf<BreathingPhaseConfig>(technique.phases.first())
         private set
 
+    // Index von currentPhase innerhalb technique.phases, separat gepflegt (statt
+    // über Gleichheit von currentPhase ermittelt), da einzelne Techniken
+    // (z. B. Box-Breathing) zwei Phasen mit identischer Konfiguration haben können.
+    var currentPhaseIndex by mutableIntStateOf(0)
+        private set
+
     var remainingMillis by mutableStateOf(totalDurationMillis)
         private set
 
@@ -73,9 +79,10 @@ class DailyExerciseSessionViewModel(
         // Steuert nur die Atemphasen-Animation (wechselt alle paar Sekunden).
         phaseJob = viewModelScope.launch {
             outer@ while (isActive) {
-                for (phase in technique.phases) {
+                for ((index, phase) in technique.phases.withIndex()) {
                     if (System.currentTimeMillis() - startTime >= totalDurationMillis) break@outer
                     currentPhase = phase
+                    currentPhaseIndex = index
                     delay(phase.durationMillis)
                 }
             }
