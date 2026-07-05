@@ -1,4 +1,11 @@
 <resources>
+    <string name="app_name">Ensō</string>
+    <string name="home_tagline">Du musst jetzt nichts entscheiden. Wähle einen ruhigen nächsten Schritt.</string>
+    <string name="home_enso_kanji">円 相</string>
+    <string name="home_breathing_button">Atemübung</string>
+    <string name="home_distraction_button">Ablenkung</string>
+    <string name="home_help_button">Hilfe</string>
+    <string name="home_daily_exercise_button">Tägliche Übung</string>
     <string name="app_name">PanicHelper</string>
 
     <!-- Navigation / screen titles -->
