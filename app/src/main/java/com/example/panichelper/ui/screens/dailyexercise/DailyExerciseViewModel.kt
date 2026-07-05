@@ -36,6 +36,9 @@ class DailyExerciseViewModel(application: Application) : AndroidViewModel(applic
     var selectedTechnique by mutableStateOf(BreathingTechniques.DEFAULT)
         private set
 
+    var selectedPmrDuration by mutableStateOf(DailyExerciseDuration.FIVE)
+        private set
+
     init {
         preferencesManager.userProfile
             .onEach { profile = it }
@@ -61,5 +64,10 @@ class DailyExerciseViewModel(application: Application) : AndroidViewModel(applic
     /** Wählt die Atemtechnik für die nächste Sitzung. */
     fun selectTechnique(technique: BreathingTechnique) {
         selectedTechnique = technique
+    }
+
+    /** Wählt die Übungslänge für die nächste PMR-Sitzung. */
+    fun selectPmrDuration(duration: DailyExerciseDuration) {
+        selectedPmrDuration = duration
     }
 }

@@ -98,6 +98,20 @@
     <string name="daily_exercise_completed_title">Exercise completed 🎉</string>
     <string name="duration_minutes_label">%1$d min</string>
 
+    <!-- Progressive muscle relaxation -->
+    <string name="nav_pmr">Progressive Muscle Relaxation</string>
+    <string name="pmr_description">Tense and release muscle groups to ease physical tension.</string>
+    <string name="pmr_tense_instruction">Tense your %1$s</string>
+    <string name="pmr_release_instruction">Release your %1$s</string>
+    <string name="pmr_group_hands">hands</string>
+    <string name="pmr_group_arms">arms</string>
+    <string name="pmr_group_shoulders">shoulders</string>
+    <string name="pmr_group_face">face</string>
+    <string name="pmr_group_chest">chest</string>
+    <string name="pmr_group_abdomen">abdomen</string>
+    <string name="pmr_group_legs">legs</string>
+    <string name="pmr_group_feet">feet</string>
+
     <!-- Settings -->
     <string name="settings_language_title">Language</string>
     <string name="settings_language_subtitle">Choose the app\'s language.</string>

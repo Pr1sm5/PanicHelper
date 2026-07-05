@@ -88,6 +88,20 @@
     <string name="daily_exercise_completed_title">Übung abgeschlossen 🎉</string>
     <string name="duration_minutes_label">%1$d Min</string>
 
+    <!-- Progressive Muskelentspannung -->
+    <string name="nav_pmr">Progressive Muskelentspannung</string>
+    <string name="pmr_description">Spanne Muskelgruppen an und lass sie los, um körperliche Anspannung zu lösen.</string>
+    <string name="pmr_tense_instruction">%1$s anspannen</string>
+    <string name="pmr_release_instruction">%1$s loslassen</string>
+    <string name="pmr_group_hands">Hände</string>
+    <string name="pmr_group_arms">Arme</string>
+    <string name="pmr_group_shoulders">Schultern</string>
+    <string name="pmr_group_face">Gesicht</string>
+    <string name="pmr_group_chest">Brust</string>
+    <string name="pmr_group_abdomen">Bauch</string>
+    <string name="pmr_group_legs">Beine</string>
+    <string name="pmr_group_feet">Füße</string>
+
     <!-- Einstellungen -->
     <string name="settings_language_title">Sprache</string>
     <string name="settings_language_subtitle">Wähle die Sprache der App.</string>

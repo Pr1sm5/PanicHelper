@@ -13,6 +13,7 @@ import com.example.panichelper.ui.screens.dailyexercise.DailyExerciseSessionScre
 import com.example.panichelper.ui.screens.distraction.DistractionScreen
 import com.example.panichelper.ui.screens.help.HelpScreen
 import com.example.panichelper.ui.screens.home.HomeScreen
+import com.example.panichelper.ui.screens.pmr.PmrSessionScreen
 import com.example.panichelper.ui.screens.settings.SettingsScreen
 
 /**
@@ -26,9 +27,11 @@ object PanicHelperRoutes {
     const val HELP = "help"
     const val DAILY_EXERCISE = "daily_exercise"
     const val DAILY_EXERCISE_SESSION = "daily_exercise_session/{minutes}/{techniqueId}"
+    const val PMR_SESSION = "pmr_session/{minutes}"
     const val SETTINGS = "settings"
 
     fun dailyExerciseSession(minutes: Int, techniqueId: String) = "daily_exercise_session/$minutes/$techniqueId"
+    fun pmrSession(minutes: Int) = "pmr_session/$minutes"
 }
 
 /**
@@ -84,8 +87,11 @@ fun PanicHelperNavGraph(
         composable(PanicHelperRoutes.DAILY_EXERCISE) {
             DailyExerciseScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onStartSession = { minutes, techniqueId ->
+                onStartBreathingSession = { minutes, techniqueId ->
                     navController.navigate(PanicHelperRoutes.dailyExerciseSession(minutes, techniqueId))
+                },
+                onStartPmrSession = { minutes ->
+                    navController.navigate(PanicHelperRoutes.pmrSession(minutes))
                 }
             )
         }
@@ -102,6 +108,17 @@ fun PanicHelperNavGraph(
             DailyExerciseSessionScreen(
                 minutes = minutes,
                 techniqueId = techniqueId,
+                onFinish = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = PanicHelperRoutes.PMR_SESSION,
+            arguments = listOf(navArgument("minutes") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val minutes = backStackEntry.arguments?.getInt("minutes") ?: 5
+            PmrSessionScreen(
+                minutes = minutes,
                 onFinish = { navController.popBackStack() }
             )
         }

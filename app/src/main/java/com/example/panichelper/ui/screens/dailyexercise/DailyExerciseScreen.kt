@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Air
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -49,19 +50,21 @@ import com.example.panichelper.ui.theme.ProfileColorPalette
  * Übersicht für den täglichen Übungsmodus.
  * Zeigt beim ersten Aufruf ein kurzes Profil-Setup (Name + Farbe), danach
  * eine Begrüßung, die aktuelle Streak und eine Liste von Routine-Karten
- * (aktuell nur Atemübung, künftig weitere Stress-Trainings-Routinen) -
- * jede Karte kapselt ihre eigene Konfiguration und einen Start-Button,
- * damit neue Routinen sich einfach als weitere Karte ergänzen lassen.
+ * (Atemübung, progressive Muskelentspannung, künftig weitere) - jede Karte
+ * kapselt ihre eigene Konfiguration und einen Start-Button, damit neue
+ * Routinen sich einfach als weitere Karte ergänzen lassen.
  *
  * @param onNavigateBack Callback zur Rückkehr zum HomeScreen.
- * @param onStartSession Callback zum Start einer Atemübungs-Sitzung (Länge in Minuten, Technik-ID).
- * @param viewModel Verwaltet Profil, Streak und die für die Atemübung gewählten Optionen.
+ * @param onStartBreathingSession Callback zum Start einer Atemübungs-Sitzung (Länge in Minuten, Technik-ID).
+ * @param onStartPmrSession Callback zum Start einer PMR-Sitzung (Länge in Minuten).
+ * @param viewModel Verwaltet Profil, Streak und die je Routine gewählten Optionen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyExerciseScreen(
     onNavigateBack: () -> Unit,
-    onStartSession: (Int, String) -> Unit,
+    onStartBreathingSession: (Int, String) -> Unit,
+    onStartPmrSession: (Int) -> Unit,
     viewModel: DailyExerciseViewModel = viewModel()
 ) {
     val profile = viewModel.profile
@@ -152,17 +155,24 @@ fun DailyExerciseScreen(
                         .padding(top = 28.dp, bottom = 12.dp)
                 )
 
-                // Aktuell die einzige Routine. Weitere Stress-Trainings-Routinen
-                // (z. B. progressive Muskelentspannung, Grounding) kommen später
-                // als weitere RoutineCard hier in der Liste dazu.
+                // Jede Routine ist eine eigene Karte. Weitere Stress-Trainings-
+                // Routinen (z. B. Grounding) kommen später einfach als weitere
+                // RoutineCard hier in der Liste dazu.
                 BreathingRoutineCard(
                     selectedDuration = viewModel.selectedDuration,
                     selectedTechnique = viewModel.selectedTechnique,
                     onSelectDuration = viewModel::selectDuration,
                     onSelectTechnique = viewModel::selectTechnique,
                     onStart = {
-                        onStartSession(viewModel.selectedDuration.minutes, viewModel.selectedTechnique.id)
+                        onStartBreathingSession(viewModel.selectedDuration.minutes, viewModel.selectedTechnique.id)
                     }
+                )
+
+                PmrRoutineCard(
+                    selectedDuration = viewModel.selectedPmrDuration,
+                    onSelectDuration = viewModel::selectPmrDuration,
+                    onStart = { onStartPmrSession(viewModel.selectedPmrDuration.minutes) },
+                    modifier = Modifier.padding(top = 16.dp)
                 )
             }
         }
@@ -220,6 +230,51 @@ private fun BreathingRoutineCard(
                     selected = selectedTechnique == technique,
                     onClick = { onSelectTechnique(technique) },
                     label = { Text(stringResource(technique.nameRes)) }
+                )
+            }
+        }
+
+        PrimaryButton(
+            text = stringResource(R.string.daily_exercise_start_button),
+            onClick = onStart,
+            modifier = Modifier.padding(top = 20.dp)
+        )
+    }
+}
+
+/**
+ * Routine-Karte für die progressive Muskelentspannung: nur eine Längen-
+ * Auswahl plus Start-Button, da es (anders als bei der Atemübung) keine
+ * verschiedenen Techniken gibt.
+ */
+@Composable
+private fun PmrRoutineCard(
+    selectedDuration: DailyExerciseDuration,
+    onSelectDuration: (DailyExerciseDuration) -> Unit,
+    onStart: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    RoutineCard(
+        icon = Icons.Filled.FitnessCenter,
+        title = stringResource(R.string.nav_pmr),
+        description = stringResource(R.string.pmr_description),
+        modifier = modifier
+    ) {
+        Text(
+            text = stringResource(R.string.daily_exercise_choose_length),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp)
+        )
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            DailyExerciseDuration.entries.forEach { duration ->
+                FilterChip(
+                    selected = selectedDuration == duration,
+                    onClick = { onSelectDuration(duration) },
+                    label = { Text(stringResource(R.string.duration_minutes_label, duration.minutes)) }
                 )
             }
         }

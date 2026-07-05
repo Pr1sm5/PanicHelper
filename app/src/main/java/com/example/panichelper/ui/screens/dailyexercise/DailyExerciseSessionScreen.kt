@@ -44,10 +44,9 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.panichelper.R
 import com.example.panichelper.audio.SoundPlayer
-import com.example.panichelper.data.RoutineProgress
 import com.example.panichelper.ui.components.AnimatedBreathingCircle
 import com.example.panichelper.ui.components.BreathingCircleDefaults
-import com.example.panichelper.ui.components.PrimaryButton
+import com.example.panichelper.ui.components.RoutineCompletionContent
 import com.example.panichelper.ui.screens.breathing.BreathingSoundCategory
 import com.example.panichelper.ui.screens.breathing.BreathingTechniques
 import com.example.panichelper.ui.screens.breathing.BreathingVisualState
@@ -57,6 +56,7 @@ import com.example.panichelper.ui.screens.breathing.triggerBreathingHaptic
 import com.example.panichelper.ui.theme.BreathingDark
 import com.example.panichelper.ui.theme.BreathingLight
 import com.example.panichelper.util.PreferencesManager
+import com.example.panichelper.util.formatRemainingTime
 import kotlinx.coroutines.launch
 
 /**
@@ -208,7 +208,7 @@ fun DailyExerciseSessionScreen(
         }
     ) { innerPadding ->
         if (isCompleted) {
-            CompletionContent(
+            RoutineCompletionContent(
                 progress = viewModel.updatedProgress,
                 onFinish = onFinish,
                 modifier = Modifier
@@ -294,7 +294,7 @@ fun DailyExerciseSessionScreen(
                 )
 
                 Text(
-                    text = if (isCountingDown) " " else formatRemaining(viewModel.remainingMillis),
+                    text = if (isCountingDown) " " else formatRemainingTime(viewModel.remainingMillis),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
@@ -302,45 +302,4 @@ fun DailyExerciseSessionScreen(
             }
         }
     }
-}
-
-@Composable
-private fun CompletionContent(
-    progress: RoutineProgress?,
-    onFinish: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = stringResource(R.string.daily_exercise_completed_title),
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-            textAlign = TextAlign.Center
-        )
-
-        if (progress != null) {
-            Text(
-                text = stringResource(R.string.daily_exercise_streak_active, progress.currentStreak),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 16.dp, bottom = 40.dp)
-            )
-        }
-
-        PrimaryButton(
-            text = stringResource(R.string.action_done),
-            onClick = onFinish
-        )
-    }
-}
-
-private fun formatRemaining(millis: Long): String {
-    val totalSeconds = (millis / 1000).coerceAtLeast(0)
-    val minutesPart = totalSeconds / 60
-    val secondsPart = totalSeconds % 60
-    return "%d:%02d".format(minutesPart, secondsPart)
 }
