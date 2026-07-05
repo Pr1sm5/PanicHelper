@@ -11,6 +11,7 @@ import com.example.panichelper.ui.screens.breathing.BreathingScreen
 import com.example.panichelper.ui.screens.dailyexercise.DailyExerciseScreen
 import com.example.panichelper.ui.screens.dailyexercise.DailyExerciseSessionScreen
 import com.example.panichelper.ui.screens.distraction.DistractionScreen
+import com.example.panichelper.ui.screens.guidedsession.GuidedSessionScreen
 import com.example.panichelper.ui.screens.help.HelpScreen
 import com.example.panichelper.ui.screens.home.HomeScreen
 import com.example.panichelper.ui.screens.pmr.PmrSessionScreen
@@ -28,6 +29,7 @@ object PanicHelperRoutes {
     const val DAILY_EXERCISE = "daily_exercise"
     const val DAILY_EXERCISE_SESSION = "daily_exercise_session/{minutes}/{techniqueId}"
     const val PMR_SESSION = "pmr_session/{minutes}"
+    const val GUIDED_SESSION = "guided_session"
     const val SETTINGS = "settings"
 
     fun dailyExerciseSession(minutes: Int, techniqueId: String) = "daily_exercise_session/$minutes/$techniqueId"
@@ -59,6 +61,9 @@ fun PanicHelperNavGraph(
                 },
                 onNavigateToDailyExercise = {
                     navController.navigate(PanicHelperRoutes.DAILY_EXERCISE)
+                },
+                onNavigateToGuidedSession = {
+                    navController.navigate(PanicHelperRoutes.GUIDED_SESSION)
                 },
                 onNavigateToSettings = {
                     navController.navigate(PanicHelperRoutes.SETTINGS)
@@ -119,6 +124,12 @@ fun PanicHelperNavGraph(
             val minutes = backStackEntry.arguments?.getInt("minutes") ?: 5
             PmrSessionScreen(
                 minutes = minutes,
+                onFinish = { navController.popBackStack() }
+            )
+        }
+
+        composable(PanicHelperRoutes.GUIDED_SESSION) {
+            GuidedSessionScreen(
                 onFinish = { navController.popBackStack() }
             )
         }

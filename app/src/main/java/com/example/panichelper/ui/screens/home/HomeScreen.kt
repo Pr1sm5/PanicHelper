@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
@@ -56,6 +57,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.panichelper.R
 import com.example.panichelper.ui.components.PrimaryButton
+import com.example.panichelper.ui.theme.EnsoGuided
+import com.example.panichelper.ui.theme.EnsoGuidedContainer
 import com.example.panichelper.ui.theme.EnsoHelp
 import com.example.panichelper.ui.theme.EnsoHelpContainer
 import com.example.panichelper.util.PreferencesManager
@@ -70,6 +73,7 @@ import kotlinx.coroutines.launch
  * @param onNavigateToDistraction Callback zur Navigation zum DistractionScreen.
  * @param onNavigateToHelp Callback zur Navigation zum HelpScreen.
  * @param onNavigateToDailyExercise Callback zur Navigation zum täglichen Übungsmodus.
+ * @param onNavigateToGuidedSession Callback zur Navigation zum geführten Komplett-Durchlauf.
  * @param onNavigateToSettings Callback zur Navigation zu den Einstellungen (u. a. Sprache).
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,6 +83,7 @@ fun HomeScreen(
     onNavigateToDistraction: () -> Unit,
     onNavigateToHelp: () -> Unit,
     onNavigateToDailyExercise: () -> Unit,
+    onNavigateToGuidedSession: () -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
     val context = LocalContext.current
@@ -163,22 +168,32 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     PrimaryButton(
-                        text = stringResource(R.string.home_help_button),
-                        icon = Icons.Filled.Phone,
-                        onClick = onNavigateToHelp,
-                        modifier = Modifier.weight(1f),
-                        containerColor = EnsoHelpContainer,
-                        contentColor = EnsoHelp,
-                        iconTint = EnsoHelp,
-                        borderColor = EnsoHelp.copy(alpha = 0.5f)
-                    )
-                    PrimaryButton(
                         text = stringResource(R.string.home_daily_exercise_button),
                         icon = Icons.Filled.EmojiEvents,
                         onClick = onNavigateToDailyExercise,
                         modifier = Modifier.weight(1f)
                     )
+                    PrimaryButton(
+                        text = stringResource(R.string.home_guided_session_button),
+                        icon = Icons.Filled.Spa,
+                        onClick = onNavigateToGuidedSession,
+                        modifier = Modifier.weight(1f),
+                        containerColor = EnsoGuidedContainer,
+                        contentColor = EnsoGuided,
+                        iconTint = EnsoGuided,
+                        borderColor = EnsoGuided.copy(alpha = 0.5f)
+                    )
                 }
+
+                PrimaryButton(
+                    text = stringResource(R.string.home_help_button),
+                    icon = Icons.Filled.Phone,
+                    onClick = onNavigateToHelp,
+                    containerColor = EnsoHelpContainer,
+                    contentColor = EnsoHelp,
+                    iconTint = EnsoHelp,
+                    borderColor = EnsoHelp.copy(alpha = 0.5f)
+                )
             }
         }
     }
