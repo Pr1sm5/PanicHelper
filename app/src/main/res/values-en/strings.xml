@@ -105,6 +105,7 @@
     <string name="home_guided_session_button">Guided Session</string>
     <string name="nav_guided_session">Guided Session</string>
     <string name="guided_session_transition_message">Take a moment. Grounding is next.</string>
+    <string name="guided_session_transition_pmr_message">Take a moment. Muscle relaxation is next.</string>
     <string name="guided_session_distraction_step">Grounding %1$d of %2$d</string>
 
     <!-- Settings -->

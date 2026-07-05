@@ -48,9 +48,11 @@ import com.example.panichelper.R
 import com.example.panichelper.audio.SoundPlayer
 import com.example.panichelper.ui.components.AnimatedBreathingCircle
 import com.example.panichelper.ui.components.BreathingCircleDefaults
+import com.example.panichelper.ui.components.RoutineCompletionOverlay
 import com.example.panichelper.ui.theme.BreathingDark
 import com.example.panichelper.ui.theme.BreathingLight
 import com.example.panichelper.util.PreferencesManager
+import com.example.panichelper.util.formatRemainingTime
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,6 +66,8 @@ fun BreathingScreen(
     val completedCycles = viewModel.completedCycles
     val vibrationIntensity = viewModel.vibrationIntensity
     val isCountingDown = viewModel.isCountingDown
+    val remainingMillis = viewModel.remainingMillis
+    val isCompleted = viewModel.isCompleted
     val context = LocalContext.current
     val preferencesManager = remember { PreferencesManager(context) }
     val coroutineScope = rememberCoroutineScope()
@@ -79,18 +83,25 @@ fun BreathingScreen(
         soundPlayer.play(BreathingSoundCategory.START)
     }
 
-    // Reagiert live auf den Audio-Schalter, statt die Musik nur beim Start zu prüfen -
-    // sonst läuft eine bereits gestartete Hintergrundmusik nach dem Ausschalten weiter.
-    LaunchedEffect(audioEnabled) {
-        if (audioEnabled) {
+    // Reagiert live auf den Audio-Schalter und das Sitzungsende, statt die Musik
+    // nur beim Start zu prüfen - sonst läuft eine bereits gestartete Hintergrundmusik
+    // nach dem Ausschalten bzw. nach Ablauf der drei Minuten weiter.
+    LaunchedEffect(audioEnabled, isCompleted) {
+        if (audioEnabled && !isCompleted) {
             soundPlayer.startBackgroundMusic(R.raw.background_music)
         } else {
             soundPlayer.stopBackgroundMusic()
         }
     }
 
-    DisposableEffect(phase, vibrationIntensity, isCountingDown, hapticsEnabled) {
-        if (!isCountingDown && hapticsEnabled) {
+    LaunchedEffect(isCompleted) {
+        if (isCompleted) {
+            soundPlayer.play(BreathingSoundCategory.END)
+        }
+    }
+
+    DisposableEffect(phase, vibrationIntensity, isCountingDown, hapticsEnabled, isCompleted) {
+        if (!isCountingDown && !isCompleted && hapticsEnabled) {
             triggerBreathingHaptic(context, phase.visualState, phase.durationMillis, vibrationIntensity)
         }
         onDispose { cancelBreathingHaptic(context) }
@@ -98,8 +109,8 @@ fun BreathingScreen(
 
     // Eigener Effekt (ohne vibrationIntensity als Key), damit das Verschieben
     // des Vibrations-Reglers keinen erneuten Sprach-Hinweis auslöst.
-    LaunchedEffect(phase, isCountingDown) {
-        if (!isCountingDown) {
+    LaunchedEffect(phase, isCountingDown, isCompleted) {
+        if (!isCountingDown && !isCompleted) {
             soundPlayer.playForBreathingPhase(phase)
         }
     }
@@ -185,10 +196,10 @@ fun BreathingScreen(
             )
         }
     ) { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -262,14 +273,20 @@ fun BreathingScreen(
             )
 
             Text(
+                text = if (!isCountingDown) formatRemainingTime(remainingMillis) else " ",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+
+            Text(
                 text = if (!isCountingDown && completedCycles > 0) {
                     stringResource(R.string.breathing_round_counter, completedCycles)
                 } else {
                     " "
                 },
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp)
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
 
             Spacer(Modifier.height(24.dp))
@@ -305,6 +322,13 @@ fun BreathingScreen(
             }
 
             Spacer(Modifier.height(24.dp))
+        }
+
+        RoutineCompletionOverlay(
+            visible = isCompleted,
+            progress = null,
+            onFinish = onNavigateBack
+        )
         }
     }
 }

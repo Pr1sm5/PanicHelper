@@ -12,9 +12,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 private const val TAG = "SoundPlayer"
 
@@ -96,9 +98,18 @@ class SoundPlayer(
     // Wird ausschließlich aus play() heraus verändert (immer derselbe Aufrufer-Thread).
     private val lastPlayedResId = mutableMapOf<SoundCategory, Int>()
 
+    // Von SoundPool tatsächlich fertig dekodierte Sample-IDs. Erst wenn eine
+    // ID hier drin ist, darf play() sie an soundPool.play() übergeben -
+    // andernfalls verpufft die Wiedergabe lautlos (SoundPool ignoriert
+    // play()-Aufrufe für noch nicht fertig geladene IDs).
+    private val loadedSoundIds = ConcurrentHashMap.newKeySet<Int>()
+
     private var backgroundMusicPlayer: MediaPlayer? = null
 
     init {
+        soundPool.setOnLoadCompleteListener { _, sampleId, status ->
+            if (status == 0) loadedSoundIds.add(sampleId)
+        }
         backgroundScope.launch {
             categoriesToPreload.forEach { loadCategory(it) }
         }
@@ -120,8 +131,18 @@ class SoundPlayer(
         backgroundScope.launch { loadCategory(category) }
     }
 
-    /** Spielt eine zufällige Variante der Kategorie, nie dieselbe wie beim letzten Mal. */
-    fun play(category: SoundCategory) {
+    /**
+     * Spielt eine zufällige Variante der Kategorie, nie dieselbe wie beim letzten Mal.
+     *
+     * Ist die gewählte Variante noch nicht (fertig) geladen - z. B. weil dieser
+     * Aufruf direkt nach dem Erstellen des Players kommt, bevor das
+     * Hintergrund-Vorladen durch ist -, wartet diese Funktion bis zu
+     * [LOAD_WAIT_TIMEOUT_MS] auf den Ladevorgang, statt die Wiedergabe einfach
+     * zu verwerfen. Genau das war der Grund, warum z. B. der Start-Hinweis nie
+     * zu hören war: er wird sofort beim Betreten des Screens ausgelöst, lange
+     * bevor SoundPool die Datei dekodiert hat.
+     */
+    suspend fun play(category: SoundCategory) {
         if (!isEnabled()) return
         val variants = category.variants
         if (variants.isEmpty()) return
@@ -131,14 +152,19 @@ class SoundPlayer(
         val chosenResId = choices.random()
         lastPlayedResId[category] = chosenResId
 
-        val soundId = soundIdsByResId[chosenResId]
+        var soundId = soundIdsByResId[chosenResId]
         if (soundId == null) {
-            // Variante war noch nicht (fertig) geladen - im Hintergrund nachladen,
-            // damit zumindest die nächste Wiedergabe dieser Kategorie klappt,
-            // statt den Aufrufer-Thread für den Ladevorgang zu blockieren.
-            preload(category)
-            return
+            withContext(Dispatchers.IO) { loadCategory(category) }
+            soundId = soundIdsByResId[chosenResId] ?: return
         }
+
+        var waited = 0L
+        while (soundId !in loadedSoundIds && waited < LOAD_WAIT_TIMEOUT_MS) {
+            delay(LOAD_POLL_INTERVAL_MS)
+            waited += LOAD_POLL_INTERVAL_MS
+        }
+        if (soundId !in loadedSoundIds) return
+
         try {
             soundPool.play(soundId, 1f, 1f, 1, 0, 1f)
         } catch (error: Exception) {
@@ -212,5 +238,7 @@ class SoundPlayer(
     companion object {
         private const val MAX_STREAMS = 2
         const val DEFAULT_BACKGROUND_MUSIC_VOLUME = 0.3f
+        private const val LOAD_WAIT_TIMEOUT_MS = 3_000L
+        private const val LOAD_POLL_INTERVAL_MS = 50L
     }
 }

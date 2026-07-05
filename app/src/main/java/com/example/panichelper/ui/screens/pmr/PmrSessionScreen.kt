@@ -45,7 +45,7 @@ import com.example.panichelper.R
 import com.example.panichelper.audio.SoundPlayer
 import com.example.panichelper.ui.components.AnimatedBreathingCircle
 import com.example.panichelper.ui.components.BreathingCircleDefaults
-import com.example.panichelper.ui.components.RoutineCompletionContent
+import com.example.panichelper.ui.components.RoutineCompletionOverlay
 import com.example.panichelper.ui.screens.breathing.BreathingSoundCategory
 import com.example.panichelper.ui.theme.BreathingDark
 import com.example.panichelper.ui.theme.BreathingLight
@@ -59,11 +59,10 @@ import kotlinx.coroutines.launch
  * groß = loslassen), läuft aber automatisch nach [minutes] Minuten aus und
  * trägt den Abschluss in dieselbe Routine-Statistik ein.
  *
- * Es gibt (noch) keine PMR-spezifischen Anspannen-/Loslassen-Sprach-Hinweise,
- * aber Start- und Ende-Ton sowie die "Constructive"-Zeilen während des
- * Loslassens sind allgemeine, wiederverwendete Hinweise aus dem gemeinsamen
- * Sound-Set. Ein kurzer, ruhiger Vibrations-Tick markiert zusätzlich jeden
- * Phasenwechsel.
+ * Nutzt PMR-eigene Sprach-Hinweise (siehe [PmrSoundCategory]): eine Einleitung
+ * vor dem Start sowie je eine Anspannen-/Loslassen-Zeile pro Muskelgruppe. Nur
+ * der Ende-Ton stammt weiterhin aus dem allgemeinen Atem-Sound-Set. Ein
+ * kurzer, ruhiger Vibrations-Tick markiert zusätzlich jeden Phasenwechsel.
  *
  * @param minutes Länge der Sitzung in Minuten (aus dem Navigations-Argument).
  * @param onFinish Callback zum Zurücknavigieren zur Übersicht (Abbruch oder Abschluss).
@@ -95,7 +94,7 @@ fun PmrSessionScreen(
     val soundPlayer = remember {
         SoundPlayer(
             context,
-            listOf(BreathingSoundCategory.START, BreathingSoundCategory.END, BreathingSoundCategory.CONSTRUCTIVE)
+            listOf(BreathingSoundCategory.END) + PmrSoundCategory.entries
         ) { audioEnabled }
     }
 
@@ -104,7 +103,7 @@ fun PmrSessionScreen(
     }
 
     LaunchedEffect(Unit) {
-        soundPlayer.play(BreathingSoundCategory.START)
+        soundPlayer.play(PmrSoundCategory.START)
     }
 
     LaunchedEffect(audioEnabled, isCompleted) {
@@ -115,10 +114,8 @@ fun PmrSessionScreen(
         }
     }
 
-    // Kein spezifischer PMR-Sprach-Hinweis für Anspannen/Loslassen vorhanden -
-    // ein kleiner, ruhiger Vibrations-Tick markiert stattdessen jeden
-    // Phasenwechsel. Gelegentlich kommt während des Loslassens zusätzlich
-    // eine "Constructive"-Zeile dazu (siehe playForPmrPhase).
+    // Ein kleiner, ruhiger Vibrations-Tick markiert jeden Phasenwechsel,
+    // zusätzlich zur passenden Anspannen-/Loslassen-Sprachzeile.
     LaunchedEffect(phase, isCountingDown, isCompleted) {
         if (!isCompleted && !isCountingDown) {
             if (hapticsEnabled) {
@@ -215,20 +212,10 @@ fun PmrSessionScreen(
             )
         }
     ) { innerPadding ->
-        if (isCompleted) {
-            RoutineCompletionContent(
-                progress = viewModel.updatedProgress,
-                onFinish = onFinish,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(24.dp)
-            )
-        } else {
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
                     .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -276,6 +263,12 @@ fun PmrSessionScreen(
                     modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
                 )
             }
+
+            RoutineCompletionOverlay(
+                visible = isCompleted,
+                progress = viewModel.updatedProgress,
+                onFinish = onFinish
+            )
         }
     }
 }

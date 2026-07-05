@@ -41,7 +41,7 @@ enum class DistractionSoundCategory(override val variants: List<Int>) : SoundCat
 }
 
 /** Spielt den zum aktuell angezeigten Ablenkungs-Inhalt passenden Sprach-Hinweis. */
-fun SoundPlayer.playForDistractionContent(content: DistractionContent) {
+suspend fun SoundPlayer.playForDistractionContent(content: DistractionContent) {
     when (content) {
         is DistractionContent.ImageContent ->
             play(DistractionSoundCategory.IMAGE_QUESTIONS[content.questionIndex])

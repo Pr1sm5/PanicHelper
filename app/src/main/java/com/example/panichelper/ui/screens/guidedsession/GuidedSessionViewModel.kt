@@ -21,7 +21,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /** Die aufeinanderfolgenden Abschnitte des geführten Komplett-Durchlaufs. */
-enum class GuidedSessionStage { BREATHING, TRANSITION, DISTRACTION, PMR, COMPLETED }
+enum class GuidedSessionStage { BREATHING, TRANSITION_TO_DISTRACTION, DISTRACTION, TRANSITION_TO_PMR, PMR, COMPLETED }
 
 /**
  * Steuert den geführten Komplett-Durchlauf: eine feste Abfolge aus
@@ -92,11 +92,14 @@ class GuidedSessionViewModel(application: Application) : AndroidViewModel(applic
             stage = GuidedSessionStage.BREATHING
             runBreathingStage()
 
-            stage = GuidedSessionStage.TRANSITION
-            runTransitionStage()
+            stage = GuidedSessionStage.TRANSITION_TO_DISTRACTION
+            runTransitionStage(TRANSITION_DURATION_MS)
 
             stage = GuidedSessionStage.DISTRACTION
             runDistractionStage()
+
+            stage = GuidedSessionStage.TRANSITION_TO_PMR
+            runTransitionStage(PMR_TRANSITION_DURATION_MS)
 
             stage = GuidedSessionStage.PMR
             runPmrStage()
@@ -121,18 +124,22 @@ class GuidedSessionViewModel(application: Application) : AndroidViewModel(applic
         val startTime = System.currentTimeMillis()
         val tickerJob = launch { tickRemaining(startTime, BREATHING_DURATION_MS) { breathingRemainingMillis = it } }
 
-        outer@ while (isActive) {
+        // Läuft jeden Atemzyklus (alle Phasen) immer vollständig zu Ende - die
+        // Zeit wird erst danach geprüft, damit die Übung nie mitten in einer
+        // Ein-/Ausatmung endet.
+        while (isActive) {
             for (currentPhase in BreathingTechniques.DEFAULT.phases) {
-                if (System.currentTimeMillis() - startTime >= BREATHING_DURATION_MS) break@outer
                 breathingPhase = currentPhase
                 delay(currentPhase.durationMillis)
             }
+            if (System.currentTimeMillis() - startTime >= BREATHING_DURATION_MS) break
         }
         tickerJob.cancel()
+        breathingRemainingMillis = 0
     }
 
-    private suspend fun runTransitionStage() {
-        val totalSeconds = (TRANSITION_DURATION_MS / 1_000L).toInt()
+    private suspend fun runTransitionStage(durationMillis: Long) {
+        val totalSeconds = (durationMillis / 1_000L).toInt()
         for (value in totalSeconds downTo 1) {
             transitionRemainingSeconds = value
             delay(1_000L)
@@ -150,15 +157,21 @@ class GuidedSessionViewModel(application: Application) : AndroidViewModel(applic
     private suspend fun runPmrStage() = coroutineScope {
         val startTime = System.currentTimeMillis()
         val tickerJob = launch { tickRemaining(startTime, PMR_DURATION_MS) { pmrRemainingMillis = it } }
+        val pairs = PmrRoutine.PHASES.chunked(2)
 
+        // Läuft das Anspannen+Loslassen-Paar der aktuellen Muskelgruppe immer
+        // vollständig zu Ende, bevor die Zeit geprüft wird.
         outer@ while (isActive) {
-            for (currentPhase in PmrRoutine.PHASES) {
+            for (pair in pairs) {
+                for (currentPhase in pair) {
+                    pmrPhase = currentPhase
+                    delay(currentPhase.durationMillis)
+                }
                 if (System.currentTimeMillis() - startTime >= PMR_DURATION_MS) break@outer
-                pmrPhase = currentPhase
-                delay(currentPhase.durationMillis)
             }
         }
         tickerJob.cancel()
+        pmrRemainingMillis = 0
     }
 
     /** Aktualisiert die Restzeit im Sekundentakt, unabhängig von der Phasenlänge. */
@@ -188,6 +201,12 @@ class GuidedSessionViewModel(application: Application) : AndroidViewModel(applic
         private const val COUNTDOWN_START = 5
         private const val BREATHING_DURATION_MS = 3 * 60_000L
         private const val TRANSITION_DURATION_MS = 5_000L
+
+        // Länger als die Pause vor dem Grounding, damit die ca. 8-9 Sekunden
+        // lange PMR-Einleitung (pm_einleitung) vollständig abspielen kann,
+        // bevor die erste Anspannen-Phase beginnt.
+        private const val PMR_TRANSITION_DURATION_MS = 9_000L
+
         private const val DISTRACTION_ITEM_DURATION_MS = 30_000L
         const val DISTRACTION_ITEM_COUNT = 5
         private const val PMR_DURATION_MS = 3 * 60_000L

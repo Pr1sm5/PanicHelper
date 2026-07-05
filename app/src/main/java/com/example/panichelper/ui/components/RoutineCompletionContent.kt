@@ -1,7 +1,15 @@
 package com.example.panichelper.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -51,5 +59,41 @@ fun RoutineCompletionContent(
             text = stringResource(R.string.action_done),
             onClick = onFinish
         )
+    }
+}
+
+/**
+ * Blendet [RoutineCompletionContent] als Overlay über dem zuletzt sichtbaren
+ * Übungsinhalt ein, statt ihn abrupt zu ersetzen - der Hintergrund bleibt
+ * eingefroren sichtbar und wird von einem abdunkelnden Scrim überblendet,
+ * während Scrim und Inhalt gemeinsam sanft einblenden und leicht wachsen.
+ * Der Übergang soll sich weich anfühlen statt hart abzuschneiden, gerade weil
+ * man beim Abschluss einer Übung ohnehin schon etwas zur Ruhe kommt.
+ */
+@Composable
+fun RoutineCompletionOverlay(
+    visible: Boolean,
+    progress: RoutineProgress?,
+    onFinish: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(animationSpec = tween(400)) + scaleIn(initialScale = 0.92f, animationSpec = tween(400)),
+        exit = fadeOut(animationSpec = tween(200)),
+        modifier = modifier.fillMaxSize()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.94f)),
+            contentAlignment = Alignment.Center
+        ) {
+            RoutineCompletionContent(
+                progress = progress,
+                onFinish = onFinish,
+                modifier = Modifier.padding(24.dp)
+            )
+        }
     }
 }

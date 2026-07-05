@@ -48,7 +48,7 @@ import com.example.panichelper.R
 import com.example.panichelper.audio.SoundPlayer
 import com.example.panichelper.ui.components.AnimatedBreathingCircle
 import com.example.panichelper.ui.components.BreathingCircleDefaults
-import com.example.panichelper.ui.components.RoutineCompletionContent
+import com.example.panichelper.ui.components.RoutineCompletionOverlay
 import com.example.panichelper.ui.screens.breathing.BreathingSoundCategory
 import com.example.panichelper.ui.screens.breathing.BreathingTechniques
 import com.example.panichelper.ui.screens.breathing.BreathingVisualState
@@ -219,20 +219,10 @@ fun DailyExerciseSessionScreen(
             )
         }
     ) { innerPadding ->
-        if (isCompleted) {
-            RoutineCompletionContent(
-                progress = viewModel.updatedProgress,
-                onFinish = onFinish,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(24.dp)
-            )
-        } else {
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
                     .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -330,6 +320,12 @@ fun DailyExerciseSessionScreen(
                     )
                 }
             }
+
+            RoutineCompletionOverlay(
+                visible = isCompleted,
+                progress = viewModel.updatedProgress,
+                onFinish = onFinish
+            )
         }
     }
 }

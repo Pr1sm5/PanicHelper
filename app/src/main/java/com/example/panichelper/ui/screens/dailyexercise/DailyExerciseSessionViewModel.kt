@@ -79,14 +79,19 @@ class DailyExerciseSessionViewModel(
     private fun start() {
         val startTime = System.currentTimeMillis()
 
-        // Steuert nur die Atemphasen-Animation (wechselt alle paar Sekunden).
+        // Läuft jeden Atemzyklus (alle Phasen der Technik) immer vollständig
+        // zu Ende - die Zeit wird erst danach geprüft, damit die Sitzung nie
+        // mitten in einer Ein-/Ausatmung endet.
         phaseJob = viewModelScope.launch {
-            outer@ while (isActive) {
+            while (isActive) {
                 for ((index, phase) in technique.phases.withIndex()) {
-                    if (System.currentTimeMillis() - startTime >= totalDurationMillis) break@outer
                     currentPhase = phase
                     currentPhaseIndex = index
                     delay(phase.durationMillis)
+                }
+                if (System.currentTimeMillis() - startTime >= totalDurationMillis) {
+                    finishSession()
+                    break
                 }
             }
         }
@@ -95,13 +100,9 @@ class DailyExerciseSessionViewModel(
         // damit die Anzeige durchgehend läuft statt nur bei jedem Phasenwechsel.
         tickerJob = viewModelScope.launch {
             while (isActive) {
-                val remaining = totalDurationMillis - (System.currentTimeMillis() - startTime)
-                if (remaining <= 0) {
-                    remainingMillis = 0
-                    finishSession()
-                    break
-                }
+                val remaining = (totalDurationMillis - (System.currentTimeMillis() - startTime)).coerceAtLeast(0)
                 remainingMillis = remaining
+                if (remaining <= 0) break
                 delay(minOf(1_000L, remaining))
             }
         }
@@ -112,7 +113,8 @@ class DailyExerciseSessionViewModel(
     }
 
     private suspend fun finishSession() {
-        phaseJob?.cancel()
+        tickerJob?.cancel()
+        remainingMillis = 0
         updatedProgress = preferencesManager.recordDailyExerciseCompletion()
         isCompleted = true
     }

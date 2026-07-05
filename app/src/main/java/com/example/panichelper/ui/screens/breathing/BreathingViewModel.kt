@@ -2,12 +2,15 @@ package com.example.panichelper.ui.screens.breathing
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class BreathingViewModel : ViewModel() {
@@ -39,7 +42,13 @@ class BreathingViewModel : ViewModel() {
     var countdownValue by mutableIntStateOf(COUNTDOWN_START)
         private set
 
-    private var cycleJob: Job? = null
+    var remainingMillis by mutableLongStateOf(TOTAL_DURATION_MS)
+        private set
+
+    var isCompleted by mutableStateOf(false)
+        private set
+
+    private var sessionJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -57,7 +66,9 @@ class BreathingViewModel : ViewModel() {
         selectedTechnique = technique
         completedCycles = 0
         currentPhaseIndex = 0
-        cycleJob?.cancel()
+        remainingMillis = TOTAL_DURATION_MS
+        isCompleted = false
+        sessionJob?.cancel()
         startCycle()
     }
 
@@ -66,19 +77,41 @@ class BreathingViewModel : ViewModel() {
     }
 
     private fun startCycle() {
-        cycleJob = viewModelScope.launch {
-            while (true) {
-                for ((index, phase) in selectedTechnique.phases.withIndex()) {
-                    currentPhase = phase
-                    currentPhaseIndex = index
-                    delay(phase.durationMillis)
+        val startTime = System.currentTimeMillis()
+
+        sessionJob = viewModelScope.launch {
+            coroutineScope {
+                val tickerJob = launch {
+                    while (isActive) {
+                        val remaining = (TOTAL_DURATION_MS - (System.currentTimeMillis() - startTime)).coerceAtLeast(0)
+                        remainingMillis = remaining
+                        if (remaining <= 0) break
+                        delay(minOf(1_000L, remaining))
+                    }
                 }
-                completedCycles++
+
+                // Läuft jeden Atemzyklus (alle Phasen der Technik) immer
+                // vollständig zu Ende - die Zeit wird erst danach geprüft,
+                // damit die Sitzung nie mitten in einer Ein-/Ausatmung endet.
+                while (isActive) {
+                    for ((index, phase) in selectedTechnique.phases.withIndex()) {
+                        currentPhase = phase
+                        currentPhaseIndex = index
+                        delay(phase.durationMillis)
+                    }
+                    completedCycles++
+                    if (System.currentTimeMillis() - startTime >= TOTAL_DURATION_MS) break
+                }
+
+                tickerJob.cancel()
+                remainingMillis = 0
+                isCompleted = true
             }
         }
     }
 
     companion object {
         private const val COUNTDOWN_START = 5
+        private const val TOTAL_DURATION_MS = 3 * 60_000L
     }
 }

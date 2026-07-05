@@ -150,30 +150,6 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     PrimaryButton(
-                        text = stringResource(R.string.home_breathing_button),
-                        icon = Icons.Filled.Air,
-                        onClick = onNavigateToBreathing,
-                        modifier = Modifier.weight(1f)
-                    )
-                    PrimaryButton(
-                        text = stringResource(R.string.home_distraction_button),
-                        icon = Icons.Filled.Pets,
-                        onClick = onNavigateToDistraction,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    PrimaryButton(
-                        text = stringResource(R.string.home_daily_exercise_button),
-                        icon = Icons.Filled.EmojiEvents,
-                        onClick = onNavigateToDailyExercise,
-                        modifier = Modifier.weight(1f)
-                    )
-                    PrimaryButton(
                         text = stringResource(R.string.home_guided_session_button),
                         icon = Icons.Filled.Spa,
                         onClick = onNavigateToGuidedSession,
@@ -183,6 +159,33 @@ fun HomeScreen(
                         iconTint = EnsoGuided,
                         borderColor = EnsoGuided.copy(alpha = 0.5f)
                     )
+
+                    PrimaryButton(
+                        text = stringResource(R.string.home_breathing_button),
+                        icon = Icons.Filled.Air,
+                        onClick = onNavigateToBreathing,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    PrimaryButton(
+                        text = stringResource(R.string.home_distraction_button),
+                        icon = Icons.Filled.Pets,
+                        onClick = onNavigateToDistraction,
+                        modifier = Modifier.weight(1f)
+                    )
+                    PrimaryButton(
+                        text = stringResource(R.string.home_daily_exercise_button),
+                        icon = Icons.Filled.EmojiEvents,
+                        onClick = onNavigateToDailyExercise,
+                        modifier = Modifier.weight(1f)
+                    )
+
                 }
 
                 PrimaryButton(

@@ -59,7 +59,7 @@ import com.example.panichelper.audio.SoundPlayer
 import com.example.panichelper.data.DistractionContent
 import com.example.panichelper.ui.components.AnimatedBreathingCircle
 import com.example.panichelper.ui.components.BreathingCircleDefaults
-import com.example.panichelper.ui.components.RoutineCompletionContent
+import com.example.panichelper.ui.components.RoutineCompletionOverlay
 import com.example.panichelper.ui.screens.breathing.BreathingPhaseConfig
 import com.example.panichelper.ui.screens.breathing.BreathingSoundCategory
 import com.example.panichelper.ui.screens.breathing.BreathingVisualState
@@ -70,6 +70,7 @@ import com.example.panichelper.ui.screens.distraction.DistractionSoundCategory
 import com.example.panichelper.ui.screens.distraction.playForDistractionContent
 import com.example.panichelper.ui.screens.pmr.PmrPhase
 import com.example.panichelper.ui.screens.pmr.PmrPhaseState
+import com.example.panichelper.ui.screens.pmr.PmrSoundCategory
 import com.example.panichelper.ui.screens.pmr.playForPmrPhase
 import com.example.panichelper.ui.theme.BreathingDark
 import com.example.panichelper.ui.theme.BreathingLight
@@ -110,7 +111,8 @@ fun GuidedSessionScreen(
     val audioEnabled by preferencesManager.audioEnabled.collectAsState(initial = true)
     val hapticsEnabled by preferencesManager.hapticsEnabled.collectAsState(initial = true)
 
-    val soundCategories: List<SoundCategory> = BreathingSoundCategory.entries + DistractionSoundCategory.entries
+    val soundCategories: List<SoundCategory> =
+        BreathingSoundCategory.entries + DistractionSoundCategory.entries + PmrSoundCategory.entries
     val soundPlayer = remember { SoundPlayer(context, soundCategories) { audioEnabled } }
 
     DisposableEffect(Unit) {
@@ -160,7 +162,14 @@ fun GuidedSessionScreen(
         }
     }
 
-    // PMR: kleiner Vibrations-Tick pro Phasenwechsel + gelegentliche "Constructive"-Zeile.
+    // PMR: Einleitung einmalig beim Betreten der Übergangspause, danach ein
+    // kleiner Vibrations-Tick + passende Anspannen-/Loslassen-Zeile pro Phase.
+    LaunchedEffect(stage) {
+        if (stage == GuidedSessionStage.TRANSITION_TO_PMR) {
+            soundPlayer.play(PmrSoundCategory.START)
+        }
+    }
+
     val pmrPhase = viewModel.pmrPhase
     LaunchedEffect(stage, pmrPhase) {
         if (stage == GuidedSessionStage.PMR) {
@@ -222,20 +231,10 @@ fun GuidedSessionScreen(
             )
         }
     ) { innerPadding ->
-        if (isCompleted) {
-            RoutineCompletionContent(
-                progress = viewModel.updatedProgress,
-                onFinish = onFinish,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(24.dp)
-            )
-        } else {
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
                     .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -248,8 +247,9 @@ fun GuidedSessionScreen(
                             remainingMillis = viewModel.breathingRemainingMillis
                         )
 
-                        GuidedSessionStage.TRANSITION -> TransitionStageContent(
-                            remainingSeconds = viewModel.transitionRemainingSeconds
+                        GuidedSessionStage.TRANSITION_TO_DISTRACTION -> TransitionStageContent(
+                            remainingSeconds = viewModel.transitionRemainingSeconds,
+                            messageRes = R.string.guided_session_transition_message
                         )
 
                         GuidedSessionStage.DISTRACTION -> DistractionStageContent(
@@ -258,12 +258,18 @@ fun GuidedSessionScreen(
                             totalCount = GuidedSessionViewModel.DISTRACTION_ITEM_COUNT
                         )
 
-                        GuidedSessionStage.PMR -> PmrStageContent(
+                        GuidedSessionStage.TRANSITION_TO_PMR -> TransitionStageContent(
+                            remainingSeconds = viewModel.transitionRemainingSeconds,
+                            messageRes = R.string.guided_session_transition_pmr_message
+                        )
+
+                        // Bleibt nach Abschluss auf dem letzten PMR-Stand eingefroren,
+                        // statt auf einen leeren Inhalt zu springen, während das
+                        // Overlay noch einblendet.
+                        GuidedSessionStage.PMR, GuidedSessionStage.COMPLETED -> PmrStageContent(
                             phase = pmrPhase,
                             remainingMillis = viewModel.pmrRemainingMillis
                         )
-
-                        GuidedSessionStage.COMPLETED -> Unit
                     }
                 }
 
@@ -287,6 +293,12 @@ fun GuidedSessionScreen(
                     )
                 }
             }
+
+            RoutineCompletionOverlay(
+                visible = isCompleted,
+                progress = viewModel.updatedProgress,
+                onFinish = onFinish
+            )
         }
     }
 }
@@ -357,14 +369,14 @@ private fun BreathingStageContent(
 }
 
 @Composable
-private fun TransitionStageContent(remainingSeconds: Int) {
+private fun TransitionStageContent(remainingSeconds: Int, messageRes: Int) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = stringResource(R.string.guided_session_transition_message),
+            text = stringResource(messageRes),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center,

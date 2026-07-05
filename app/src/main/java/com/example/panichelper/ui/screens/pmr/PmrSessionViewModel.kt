@@ -65,33 +65,39 @@ class PmrSessionViewModel(
 
     private fun start() {
         val startTime = System.currentTimeMillis()
+        val pairs = PmrRoutine.PHASES.chunked(2)
 
+        // Läuft das Anspannen+Loslassen-Paar der aktuellen Muskelgruppe immer
+        // vollständig zu Ende - die Zeit wird erst danach geprüft, damit die
+        // Sitzung nie mitten im Anspannen oder Loslassen endet.
         phaseJob = viewModelScope.launch {
             outer@ while (isActive) {
-                for (phase in PmrRoutine.PHASES) {
-                    if (System.currentTimeMillis() - startTime >= totalDurationMillis) break@outer
-                    currentPhase = phase
-                    delay(phase.durationMillis)
+                for (pair in pairs) {
+                    for (phase in pair) {
+                        currentPhase = phase
+                        delay(phase.durationMillis)
+                    }
+                    if (System.currentTimeMillis() - startTime >= totalDurationMillis) {
+                        finishSession()
+                        break@outer
+                    }
                 }
             }
         }
 
         tickerJob = viewModelScope.launch {
             while (isActive) {
-                val remaining = totalDurationMillis - (System.currentTimeMillis() - startTime)
-                if (remaining <= 0) {
-                    remainingMillis = 0
-                    finishSession()
-                    break
-                }
+                val remaining = (totalDurationMillis - (System.currentTimeMillis() - startTime)).coerceAtLeast(0)
                 remainingMillis = remaining
+                if (remaining <= 0) break
                 delay(minOf(1_000L, remaining))
             }
         }
     }
 
     private suspend fun finishSession() {
-        phaseJob?.cancel()
+        tickerJob?.cancel()
+        remainingMillis = 0
         updatedProgress = preferencesManager.recordDailyExerciseCompletion()
         isCompleted = true
     }
@@ -102,6 +108,9 @@ class PmrSessionViewModel(
     }
 
     companion object {
-        private const val COUNTDOWN_START = 5
+        // Länger als bei den anderen Übungen (5s), damit die ca. 8-9 Sekunden
+        // lange Einleitung (pm_einleitung) vollständig abspielen kann, bevor
+        // die erste Anspannen-Phase beginnt.
+        private const val COUNTDOWN_START = 9
     }
 }

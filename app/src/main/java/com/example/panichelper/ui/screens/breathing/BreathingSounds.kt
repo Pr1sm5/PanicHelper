@@ -38,7 +38,7 @@ private const val CONSTRUCTIVE_CHANCE = 0.3f
  * "Constructive"-Zeile eingestreut – aber nur, wenn die Phase lang genug ist,
  * damit der (meist längere) Clip nicht abgeschnitten wirkt.
  */
-fun SoundPlayer.playForBreathingPhase(phase: BreathingPhaseConfig) {
+suspend fun SoundPlayer.playForBreathingPhase(phase: BreathingPhaseConfig) {
     when (phase.visualState) {
         BreathingVisualState.EXPAND -> play(BreathingSoundCategory.BREATH_IN)
         BreathingVisualState.CONTRACT -> play(BreathingSoundCategory.BREATH_OUT)

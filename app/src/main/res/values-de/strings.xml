@@ -106,6 +106,7 @@
     <string name="home_guided_session_button">Geführte Sitzung</string>
     <string name="nav_guided_session">Geführte Sitzung</string>
     <string name="guided_session_transition_message">Nimm dir einen Moment. Als Nächstes kommt die Erdungsübung.</string>
+    <string name="guided_session_transition_pmr_message">Nimm dir einen Moment. Als Nächstes kommt die Muskelentspannung.</string>
     <string name="guided_session_distraction_step">Erdung %1$d von %2$d</string>
 
     <!-- Einstellungen -->
