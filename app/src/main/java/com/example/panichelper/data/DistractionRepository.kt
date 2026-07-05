@@ -39,7 +39,10 @@ object DistractionRepository {
         R.drawable.distraction_5,
         R.drawable.distraction_6,
         R.drawable.distraction_7,
-        R.drawable.distraction_8
+        R.drawable.distraction_8,
+        R.drawable.distraction_9,
+        R.drawable.distraction_10,
+        R.drawable.distraction_11
     )
 
     // Anzahl der Einträge in R.array.distraction_image_questions.
