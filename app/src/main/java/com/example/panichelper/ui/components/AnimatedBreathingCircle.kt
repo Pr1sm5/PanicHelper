@@ -46,7 +46,7 @@ fun AnimatedBreathingCircle(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 90_000, easing = LinearEasing),
+            animation = tween(durationMillis = 80000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "ensoRotationAngle"
@@ -56,33 +56,44 @@ fun AnimatedBreathingCircle(
         modifier = modifier.size(BreathingCircleDefaults.FrameSize),
         contentAlignment = Alignment.Center
     ) {
-        // Äußerer Enso-Ring: leicht geöffnetes Tusche-Kreismotiv, dreht sich
-        // sehr langsam (90s/Umdrehung) – kaum wahrnehmbar, aber nie ganz still.
+        // Äußerer Enso-Ring: zwei leicht geöffnete Tusche-Kreismotive, die sich
+        // sehr langsam (90s/Umdrehung) in entgegengesetzte Richtungen drehen –
+        // kaum wahrnehmbar, aber nie ganz still.
         Canvas(modifier = Modifier.size(BreathingCircleDefaults.FrameSize)) {
+            val strokeWidth = size.minDimension * 0.018f
+            val diameter = size.minDimension * 0.94f
+            val outerDiameter = size.minDimension * 1.1f
+            val topLeft = Offset(
+                (size.width - diameter) / 2f,
+                (size.height - diameter) / 2f
+            )
+            val outerTopLeft = Offset(
+                (size.width - outerDiameter) / 2f,
+                (size.height - outerDiameter) / 2f
+            )
+            val arcSize = Size(diameter, diameter)
+            val outerArcSize = Size(outerDiameter, outerDiameter)
+
             rotate(ensoRotation) {
-                val strokeWidth = size.minDimension * 0.018f
-                val diameter = size.minDimension * 0.94f
-                val topLeft = Offset(
-                    (size.width - diameter) / 2f,
-                    (size.height - diameter) / 2f
-                )
-                val arcSize = Size(diameter, diameter)
                 drawArc(
                     color = color.copy(alpha = 0.28f),
-                    startAngle = -100f,
-                    sweepAngle = 300f,
+                    startAngle = -95f,
+                    sweepAngle = 260f,
                     useCenter = false,
                     topLeft = topLeft,
                     size = arcSize,
                     style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                 )
+            }
+
+            rotate(-ensoRotation) {
                 drawArc(
                     color = color.copy(alpha = 0.14f),
-                    startAngle = -95f,
-                    sweepAngle = 288f,
+                    startAngle = -180f,
+                    sweepAngle = 300f,
                     useCenter = false,
-                    topLeft = topLeft,
-                    size = arcSize,
+                    topLeft = outerTopLeft,
+                    size = outerArcSize,
                     style = Stroke(width = strokeWidth * 1.8f, cap = StrokeCap.Round)
                 )
             }
