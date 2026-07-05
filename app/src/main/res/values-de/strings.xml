@@ -49,11 +49,11 @@
     </string-array>
 
     <string-array name="distraction_fixed_prompts">
-        <item>Benennen Sie fünf Dinge, die Sie sehen.</item>
-        <item>Nehmen Sie zwei Gerüche wahr.</item>
-        <item>Hören Sie drei Geräusche in Ihrer Umgebung?</item>
-        <item>Spüren Sie vier Dinge, die Sie berühren können.</item>
-        <item>Und konzentrieren Sie sich auf eine Sache, die Sie schmecken.</item>
+        <item>Benenne fünf Dinge, die du sehen kannst.</item>
+        <item>Nehme zwei Gerüche wahr.</item>
+        <item>Hörst du drei Geräusche in deiner Umgebung?</item>
+        <item>Spür vier Dinge, die du berühren kannst.</item>
+        <item>Und konzentriere dich auf eine Sache, die du schmecken kannst.</item>
     </string-array>
 
     <!-- Hilfe -->
