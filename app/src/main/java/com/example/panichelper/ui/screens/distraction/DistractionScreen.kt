@@ -23,10 +23,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.SelfImprovement
-import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.VolumeOff
@@ -52,7 +50,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -173,19 +170,32 @@ fun DistractionScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Fester Rahmen für den wechselnden Inhalt: Bild+Frage und reiner
+            // Text-Prompt sind unterschiedlich hoch, würden also Badge/Dots/
+            // Button nach oben oder unten verschieben, wenn dieser Bereich
+            // einfach nur so groß wäre wie sein jeweiliger Inhalt. Eine feste
+            // Höhe hält den Rest des Screens an Ort und Stelle.
+            //
             // AnimatedContent sorgt für einen sanften Fade+Scale-Übergang,
             // statt dass der Inhalt hart wechselt. Der Index wird als Teil
             // des Keys mitgegeben, damit auch bei "zufällig auf denselben
             // Inhalt" zuverlässig neu animiert wird.
-            AnimatedContent(
-                targetState = viewModel.currentIndex to content,
-                transitionSpec = {
-                    (fadeIn(tween(350)) + scaleIn(initialScale = 0.92f, animationSpec = tween(350)))
-                        .togetherWith(fadeOut(tween(200)) + scaleOut(targetScale = 1.05f, animationSpec = tween(200)))
-                },
-                label = "distractionContentTransition"
-            ) { (_, animatedContent) ->
-                DistractionContentBody(animatedContent = animatedContent)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(DISTRACTION_CONTENT_HEIGHT),
+                contentAlignment = Alignment.Center
+            ) {
+                AnimatedContent(
+                    targetState = viewModel.currentIndex to content,
+                    transitionSpec = {
+                        (fadeIn(tween(350)) + scaleIn(initialScale = 0.92f, animationSpec = tween(350)))
+                            .togetherWith(fadeOut(tween(200)) + scaleOut(targetScale = 1.05f, animationSpec = tween(200)))
+                    },
+                    label = "distractionContentTransition"
+                ) { (_, animatedContent) ->
+                    DistractionContentBody(animatedContent = animatedContent)
+                }
             }
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -210,22 +220,13 @@ fun DistractionScreen(
                     modifier = Modifier.weight(1f)
                 )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                PrimaryButton(
-                    text = stringResource(R.string.distraction_random_button),
-                    icon = Icons.Filled.Shuffle,
-                    onClick = { viewModel.showRandomContent() },
-                    modifier = Modifier.weight(1f)
-                )
-            }
         }
     }
 }
+
+// Feste Höhe des wechselnden Inhaltsbereichs (Bild + Frage oder Text-Prompt),
+// groß genug für das größere Bild plus eine zweizeilige Frage darunter.
+private val DISTRACTION_CONTENT_HEIGHT = 420.dp
 
 /**
  * Zeigt ein kreisförmiges Icon-Badge, dessen Farbe und Symbol vom
@@ -284,7 +285,7 @@ private fun DistractionContentBody(animatedContent: DistractionContent) {
                         contentDescription = stringResource(R.string.distraction_image_description),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(240.dp)
+                            .size(300.dp)
                             .clip(RoundedCornerShape(28.dp))
                     )
                 }
@@ -296,13 +297,11 @@ private fun DistractionContentBody(animatedContent: DistractionContent) {
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
-                        .padding(top = 28.dp)
+                        .padding(top = 20.dp)
                         .fillMaxWidth()
                 )
             }
         }
-
-
 
         is DistractionContent.TextContent -> {
             val prompts = stringArrayResource(R.array.distraction_fixed_prompts)
@@ -313,7 +312,7 @@ private fun DistractionContentBody(animatedContent: DistractionContent) {
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 40.dp)
+                    .padding(horizontal = 8.dp)
             )
         }
     }

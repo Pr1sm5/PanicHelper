@@ -39,7 +39,6 @@
     <!-- Ablenkung -->
     <string name="distraction_image_description">Ablenkungsbild</string>
     <string name="distraction_next_button">Nächstes Bild</string>
-    <string name="distraction_random_button">Zufälliges Bild</string>
     <string-array name="distraction_image_questions">
         <item>Welche Farbe hat das Fell?</item>
         <item>Wie viele Ohren siehst du?</item>
@@ -72,7 +71,9 @@
 
     <!-- Tägliche Übung -->
     <string name="daily_exercise_header_title">Baue dir eine tägliche Routine auf</string>
-    <string name="daily_exercise_header_subtitle">Kurze, geführte Atemübungen – jeden Tag ein bisschen.</string>
+    <string name="daily_exercise_header_subtitle">Kurze, geführte Übungen, die dich widerstandsfähiger gegen Stress machen – jeden Tag ein bisschen.</string>
+    <string name="daily_exercise_routines_heading">Deine Routinen</string>
+    <string name="daily_exercise_breathing_description">Eine kurze, geführte Atemübung.</string>
     <string name="daily_exercise_greeting">Hallo, %1$s!</string>
     <string name="daily_exercise_edit_profile">Profil bearbeiten</string>
     <string name="daily_exercise_streak_active">🔥 %1$d Tage in Folge</string>

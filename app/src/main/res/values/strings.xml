@@ -39,7 +39,6 @@
     <!-- Distraction -->
     <string name="distraction_image_description">Distraction image</string>
     <string name="distraction_next_button">Next image</string>
-    <string name="distraction_random_button">Random image</string>
     <string name="distraction_color_prompt_template">Find 5 objects that are %1$s.</string>
     <string-array name="distraction_image_questions">
         <item>What color is the fur?</item>
@@ -82,7 +81,9 @@
 
     <!-- Daily exercise -->
     <string name="daily_exercise_header_title">Build a daily routine</string>
-    <string name="daily_exercise_header_subtitle">Short, guided breathing exercises – a little every day.</string>
+    <string name="daily_exercise_header_subtitle">Short, guided exercises that build resilience against stress – a little every day.</string>
+    <string name="daily_exercise_routines_heading">Your routines</string>
+    <string name="daily_exercise_breathing_description">A short, guided breathing exercise.</string>
     <string name="daily_exercise_greeting">Hi, %1$s!</string>
     <string name="daily_exercise_edit_profile">Edit profile</string>
     <string name="daily_exercise_streak_active">🔥 %1$d day streak</string>
