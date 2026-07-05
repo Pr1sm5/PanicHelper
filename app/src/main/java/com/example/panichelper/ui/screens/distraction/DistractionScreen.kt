@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,22 +28,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.panichelper.data.DistractionRepository
+import com.example.panichelper.data.DistractionContent
 import com.example.panichelper.ui.components.PrimaryButton
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.material3.ExperimentalMaterial3Api
 
 /**
  * Screen für die Ablenkungsfunktion.
- * Zeigt ein lokal gespeichertes Bild mit einer zufälligen Beobachtungsfrage
- * darunter. Über zwei Buttons kann zum nächsten bzw. einem zufälligen
- * Bild gewechselt werden.
+ * Zeigt abwechselnd:
+ * - ein lokal gespeichertes Bild mit einer zufälligen Beobachtungsfrage, oder
+ * - einen großen Text-Prompt ohne Bild (Grounding-Übung, z. B. Geruch/Geräusche).
  *
  * @param onNavigateBack Callback zur Rückkehr zum HomeScreen.
- * @param viewModel Verwaltet Bild-Index und aktuelle Frage.
+ * @param viewModel Verwaltet den aktuell angezeigten Inhalt.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,7 +52,7 @@ fun DistractionScreen(
     onNavigateBack: () -> Unit,
     viewModel: DistractionViewModel = viewModel()
 ) {
-    val imageRes = DistractionRepository.getImageResAt(viewModel.currentImageIndex)
+    val content = viewModel.currentContent
 
     Scaffold(
         topBar = {
@@ -80,34 +80,52 @@ fun DistractionScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Karte mit abgerundeten Ecken um das Bild.
-            Card(
-                shape = RoundedCornerShape(28.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = imageRes),
-                    contentDescription = "Ablenkungsbild",
-                    contentScale = ContentScale.Crop, // schneidet sauber zu, statt zu verzerren
-                    modifier = Modifier
-                        .size(240.dp)
-                        .clip(RoundedCornerShape(28.dp))
-                        .padding(8.dp)
-                )
-            }
+            // Je nach Inhaltstyp wird entweder Bild+Frage oder nur ein
+            // großer Text angezeigt.
+            when (content) {
+                is DistractionContent.ImageContent -> {
+                    Card(
+                        shape = RoundedCornerShape(28.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = content.imageRes),
+                            contentDescription = "Ablenkungsbild",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(240.dp)
+                                .clip(RoundedCornerShape(28.dp))
+                        )
+                    }
 
-            Text(
-                text = viewModel.currentQuestion,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(top = 28.dp, bottom = 40.dp)
-                    .fillMaxWidth()
-            )
+                    Text(
+                        text = content.question,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .padding(top = 28.dp, bottom = 40.dp)
+                            .fillMaxWidth()
+                    )
+                }
+
+                is DistractionContent.TextContent -> {
+                    // Reine Text-Übung: kein Bild, dafür ein großer,
+                    // gut lesbarer Text als zentraler Fokuspunkt.
+                    Text(
+                        text = content.text,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 60.dp)
+                    )
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -116,7 +134,7 @@ fun DistractionScreen(
                 PrimaryButton(
                     text = "Nächstes Bild",
                     icon = Icons.Filled.SkipNext,
-                    onClick = { viewModel.showNextImage() },
+                    onClick = { viewModel.showNextContent() },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -129,7 +147,7 @@ fun DistractionScreen(
                 PrimaryButton(
                     text = "Zufälliges Bild",
                     icon = Icons.Filled.Shuffle,
-                    onClick = { viewModel.showRandomImage() },
+                    onClick = { viewModel.showRandomContent() },
                     modifier = Modifier.weight(1f)
                 )
             }
