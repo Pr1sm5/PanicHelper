@@ -6,7 +6,6 @@
     <string name="home_distraction_button">Ablenkung</string>
     <string name="home_help_button">Hilfe</string>
     <string name="home_daily_exercise_button">Tägliche Übung</string>
-    <string name="app_name">PanicHelper</string>
 
     <!-- Navigation / screen titles -->
     <string name="nav_breathing">Breathing Exercise</string>
