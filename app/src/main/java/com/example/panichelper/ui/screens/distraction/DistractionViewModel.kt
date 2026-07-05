@@ -16,13 +16,19 @@ import com.example.panichelper.data.DistractionRepository
 class DistractionViewModel : ViewModel() {
 
     // Aktueller Gesamt-Index über alle Inhalte (Bilder + Text-Prompts).
-    private var currentIndex by mutableIntStateOf(0)
+    // Öffentlich lesbar, damit die UI z.B. einen Fortschritts-Indikator
+    // (Dots) anzeigen kann.
+    var currentIndex by mutableIntStateOf(0)
+        private set
 
     // Aktuell angezeigter Inhalt, wird bei jedem Wechsel neu erzeugt.
     var currentContent: DistractionContent by mutableStateOf(
         DistractionRepository.getContentAt(0)
     )
         private set
+
+    /** Gesamtanzahl aller rotierenden Inhalte (für den Dot-Indikator). */
+    val totalCount: Int get() = DistractionRepository.totalContentCount()
 
     /**
      * Wechselt zum nächsten Inhalt in der Reihenfolge (zyklisch durch

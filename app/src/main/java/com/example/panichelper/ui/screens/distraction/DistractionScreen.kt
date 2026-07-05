@@ -1,7 +1,16 @@
 package com.example.panichelper.ui.screens.distraction
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,13 +19,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +42,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
@@ -38,13 +56,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.panichelper.R
 import com.example.panichelper.data.DistractionContent
 import com.example.panichelper.ui.components.PrimaryButton
-import androidx.compose.material3.ExperimentalMaterial3Api
 
 /**
  * Screen für die Ablenkungsfunktion.
  * Zeigt abwechselnd:
- * - ein lokal gespeichertes Bild mit einer zufälligen Beobachtungsfrage, oder
- * - einen großen Text-Prompt ohne Bild (Grounding-Übung, z. B. Geruch/Geräusche).
+ * - ein lokal gespeichertes Bild mit einer zufälligen Beobachtungsfrage,
+ * - eine Farbsuch-Übung (Grounding), oder
+ * - einen großen Text-Prompt ohne Bild (z. B. Geruch/Geräusche).
+ *
+ * Wechsel zwischen den Inhalten sind sanft animiert (Fade + Scale) und
+ * werden durch ein farbiges Icon-Badge sowie Fortschritts-Punkte begleitet,
+ * damit der Screen trotz Einfachheit lebendig wirkt.
  *
  * @param onNavigateBack Callback zur Rückkehr zum HomeScreen.
  * @param viewModel Verwaltet den aktuell angezeigten Inhalt.
@@ -56,6 +78,7 @@ fun DistractionScreen(
     viewModel: DistractionViewModel = viewModel()
 ) {
     val content = viewModel.currentContent
+    val haptics = LocalHapticFeedback.current
 
     Scaffold(
         topBar = {
@@ -83,70 +106,39 @@ fun DistractionScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Je nach Inhaltstyp wird entweder Bild+Frage oder nur ein
-            // großer Text angezeigt.
-            when (content) {
-                is DistractionContent.ImageContent -> {
-                    Card(
-                        shape = RoundedCornerShape(28.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Image(
-                            painter = painterResource(id = content.imageRes),
-                            contentDescription = stringResource(R.string.distraction_image_description),
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(240.dp)
-                                .clip(RoundedCornerShape(28.dp))
-                        )
-                    }
 
-                    val questions = stringArrayResource(R.array.distraction_image_questions)
-                    Text(
-                        text = questions[content.questionIndex],
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .padding(top = 28.dp, bottom = 40.dp)
-                            .fillMaxWidth()
-                    )
-                }
+            // Icon-Badge: zeigt je nach Inhaltstyp ein anderes Icon in einer
+            // andersfarbigen, abgerundeten Kreisfläche - gibt sofort einen
+            // visuellen Hinweis darauf, um welche Art von Übung es geht.
+            ContentTypeBadge(content = content)
 
-                is DistractionContent.ColorPromptContent -> {
-                    val colors = stringArrayResource(R.array.distraction_grounding_colors)
-                    Text(
-                        text = stringResource(
-                            R.string.distraction_color_prompt_template,
-                            colors[content.colorIndex]
-                        ),
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 60.dp)
-                    )
-                }
+            Spacer(modifier = Modifier.height(20.dp))
 
-                is DistractionContent.TextContent -> {
-                    // Reine Text-Übung: kein Bild, dafür ein großer,
-                    // gut lesbarer Text als zentraler Fokuspunkt.
-                    val prompts = stringArrayResource(R.array.distraction_fixed_prompts)
-                    Text(
-                        text = prompts[content.promptIndex],
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 60.dp)
-                    )
-                }
+            // AnimatedContent sorgt für einen sanften Fade+Scale-Übergang,
+            // statt dass der Inhalt hart wechselt. Der Index wird als Teil
+            // des Keys mitgegeben, damit auch bei "zufällig auf denselben
+            // Inhalt" zuverlässig neu animiert wird.
+            AnimatedContent(
+                targetState = viewModel.currentIndex to content,
+                transitionSpec = {
+                    (fadeIn(tween(350)) + scaleIn(initialScale = 0.92f, animationSpec = tween(350)))
+                        .togetherWith(fadeOut(tween(200)) + scaleOut(targetScale = 1.05f, animationSpec = tween(200)))
+                },
+                label = "distractionContentTransition"
+            ) { (_, animatedContent) ->
+                DistractionContentBody(animatedContent = animatedContent)
             }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // Fortschritts-Punkte: kleine Dots, die zeigen, an welcher
+            // Position man sich innerhalb der Rotation befindet.
+            ProgressDots(
+                total = viewModel.totalCount,
+                currentIndex = viewModel.currentIndex
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -155,7 +147,10 @@ fun DistractionScreen(
                 PrimaryButton(
                     text = stringResource(R.string.distraction_next_button),
                     icon = Icons.Filled.SkipNext,
-                    onClick = { viewModel.showNextContent() },
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        viewModel.showNextContent()
+                    },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -168,10 +163,154 @@ fun DistractionScreen(
                 PrimaryButton(
                     text = stringResource(R.string.distraction_random_button),
                     icon = Icons.Filled.Shuffle,
-                    onClick = { viewModel.showRandomContent() },
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        viewModel.showRandomContent()
+                    },
                     modifier = Modifier.weight(1f)
                 )
             }
+        }
+    }
+}
+
+/**
+ * Zeigt ein kreisförmiges Icon-Badge, dessen Farbe und Symbol vom
+ * aktuellen Inhaltstyp abhängen. Rein dekorativ/informativ.
+ */
+@Composable
+private fun ContentTypeBadge(content: DistractionContent) {
+    val (icon, containerColor, contentColor) = when (content) {
+        is DistractionContent.ImageContent -> Triple(
+            Icons.Filled.Pets,
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.onPrimaryContainer
+        )
+        is DistractionContent.ColorPromptContent -> Triple(
+            Icons.Filled.Palette,
+            MaterialTheme.colorScheme.secondaryContainer,
+            MaterialTheme.colorScheme.onSecondaryContainer
+        )
+        is DistractionContent.TextContent -> Triple(
+            Icons.Filled.SelfImprovement,
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .size(64.dp)
+            .clip(CircleShape)
+            .background(containerColor),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = contentColor,
+            modifier = Modifier.size(32.dp)
+        )
+    }
+}
+
+/**
+ * Zeigt den eigentlichen Inhalt (Bild+Frage, Farbübung oder Text-Prompt),
+ * abhängig vom Typ. Wird innerhalb von AnimatedContent aufgerufen.
+ */
+@Composable
+private fun DistractionContentBody(animatedContent: DistractionContent) {
+    when (animatedContent) {
+        is DistractionContent.ImageContent -> {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Card(
+                    shape = RoundedCornerShape(28.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = animatedContent.imageRes),
+                        contentDescription = stringResource(R.string.distraction_image_description),
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(240.dp)
+                            .clip(RoundedCornerShape(28.dp))
+                    )
+                }
+
+                val questions = stringArrayResource(R.array.distraction_image_questions)
+                Text(
+                    text = questions[animatedContent.questionIndex],
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(top = 28.dp)
+                        .fillMaxWidth()
+                )
+            }
+        }
+
+        is DistractionContent.ColorPromptContent -> {
+            val colors = stringArrayResource(R.array.distraction_grounding_colors)
+            Text(
+                text = stringResource(
+                    R.string.distraction_color_prompt_template,
+                    colors[animatedContent.colorIndex]
+                ),
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 40.dp)
+            )
+        }
+
+        is DistractionContent.TextContent -> {
+            val prompts = stringArrayResource(R.array.distraction_fixed_prompts)
+            Text(
+                text = prompts[animatedContent.promptIndex],
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 40.dp)
+            )
+        }
+    }
+}
+
+/**
+ * Kleine Punktreihe, die die aktuelle Position innerhalb der Rotation
+ * anzeigt (ähnlich einem Karussell-Indikator). Der aktive Punkt ist
+ * größer und in der Primärfarbe eingefärbt, inaktive Punkte sind dezent
+ * grau, um nicht abzulenken.
+ */
+@Composable
+private fun ProgressDots(total: Int, currentIndex: Int) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(total) { index ->
+            val isActive = index == currentIndex
+            val dotColor: Color = if (isActive) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
+            }
+            val dotSize = if (isActive) 10.dp else 7.dp
+
+            Box(
+                modifier = Modifier
+                    .size(dotSize)
+                    .clip(CircleShape)
+                    .background(dotColor)
+            )
         }
     }
 }
