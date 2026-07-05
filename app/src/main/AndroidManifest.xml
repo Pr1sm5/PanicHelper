@@ -2,7 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Keine gefährlichen Berechtigungen nötig.
-         ACTION_DIAL öffnet nur den Dialer, ohne CALL_PHONE-Berechtigung. -->
+         ACTION_DIAL öffnet nur den Dialer, ohne CALL_PHONE-Berechtigung.
+         Die Kontaktauswahl nutzt ACTION_PICK auf einer einzelnen Telefonnummer;
+         dafür erteilt Android eine temporäre Lese-Berechtigung nur für den
+         zurückgegebenen Eintrag, ohne READ_CONTACTS-Berechtigung. -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application

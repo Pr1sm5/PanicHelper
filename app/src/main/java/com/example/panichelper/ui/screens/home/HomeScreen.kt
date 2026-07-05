@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.MaterialTheme
@@ -27,12 +28,14 @@ import com.example.panichelper.ui.components.PrimaryButton
  * @param onNavigateToBreathing Callback zur Navigation zum BreathingScreen.
  * @param onNavigateToDistraction Callback zur Navigation zum DistractionScreen.
  * @param onNavigateToHelp Callback zur Navigation zum HelpScreen.
+ * @param onNavigateToDailyExercise Callback zur Navigation zum täglichen Übungsmodus.
  */
 @Composable
 fun HomeScreen(
     onNavigateToBreathing: () -> Unit,
     onNavigateToDistraction: () -> Unit,
-    onNavigateToHelp: () -> Unit
+    onNavigateToHelp: () -> Unit,
+    onNavigateToDailyExercise: () -> Unit
 ) {
     Scaffold { innerPadding ->
         Column(
@@ -75,7 +78,14 @@ fun HomeScreen(
             PrimaryButton(
                 text = "Hilfe",
                 icon = Icons.Filled.Phone,
-                onClick = onNavigateToHelp
+                onClick = onNavigateToHelp,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            PrimaryButton(
+                text = "Tägliche Übung",
+                icon = Icons.Filled.EmojiEvents,
+                onClick = onNavigateToDailyExercise
             )
         }
     }

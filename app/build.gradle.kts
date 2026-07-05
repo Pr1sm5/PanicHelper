@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 android {
@@ -32,6 +33,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
     }
 
 
@@ -72,6 +74,12 @@ dependencies {
 
     // DataStore (für persistente Speicherung der Telefonnummer)
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // Serialisierung der gespeicherten Vertrauenspersonen-Liste als JSON
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+
+    // java.time (LocalDate) auf minSdk 24 nutzbar machen (für die Streak-Berechnung)
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.3")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

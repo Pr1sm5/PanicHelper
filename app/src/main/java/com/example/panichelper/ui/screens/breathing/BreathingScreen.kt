@@ -49,21 +49,32 @@ fun BreathingScreen(
     val technique = viewModel.selectedTechnique
     val completedCycles = viewModel.completedCycles
     val vibrationIntensity = viewModel.vibrationIntensity
+    val isCountingDown = viewModel.isCountingDown
     val context = LocalContext.current
 
-    DisposableEffect(phase, vibrationIntensity) {
-        triggerBreathingHaptic(context, phase.visualState, phase.durationMillis, vibrationIntensity)
+    DisposableEffect(phase, vibrationIntensity, isCountingDown) {
+        if (!isCountingDown) {
+            triggerBreathingHaptic(context, phase.visualState, phase.durationMillis, vibrationIntensity)
+        }
         onDispose { cancelBreathingHaptic(context) }
     }
 
-    val targetSize = when (phase.visualState) {
-        BreathingVisualState.EXPAND, BreathingVisualState.HOLD_LARGE -> BreathingCircleDefaults.MaxSize
-        BreathingVisualState.CONTRACT, BreathingVisualState.HOLD_SMALL -> BreathingCircleDefaults.MinSize
+    val targetSize = if (isCountingDown) {
+        BreathingCircleDefaults.MinSize
+    } else {
+        when (phase.visualState) {
+            BreathingVisualState.EXPAND, BreathingVisualState.HOLD_LARGE -> BreathingCircleDefaults.MaxSize
+            BreathingVisualState.CONTRACT, BreathingVisualState.HOLD_SMALL -> BreathingCircleDefaults.MinSize
+        }
     }
 
-    val targetColor = when (phase.visualState) {
-        BreathingVisualState.EXPAND, BreathingVisualState.HOLD_LARGE -> BreathingLight
-        BreathingVisualState.CONTRACT, BreathingVisualState.HOLD_SMALL -> BreathingDark
+    val targetColor = if (isCountingDown) {
+        BreathingLight
+    } else {
+        when (phase.visualState) {
+            BreathingVisualState.EXPAND, BreathingVisualState.HOLD_LARGE -> BreathingLight
+            BreathingVisualState.CONTRACT, BreathingVisualState.HOLD_SMALL -> BreathingDark
+        }
     }
 
     val animatedSize by animateDpAsState(
@@ -116,16 +127,23 @@ fun BreathingScreen(
                 contentAlignment = Alignment.Center
             ) {
                 AnimatedBreathingCircle(size = animatedSize, color = animatedColor)
+                if (isCountingDown) {
+                    Text(
+                        text = viewModel.countdownValue.toString(),
+                        style = MaterialTheme.typography.displayLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
             }
 
             Text(
-                text = phase.label,
+                text = if (isCountingDown) "Gleich geht's los …" else phase.label,
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                text = if (completedCycles > 0) "Runde $completedCycles" else " ",
+                text = if (!isCountingDown && completedCycles > 0) "Runde $completedCycles" else " ",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp)

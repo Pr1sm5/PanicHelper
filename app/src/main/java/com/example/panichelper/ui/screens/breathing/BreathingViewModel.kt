@@ -24,10 +24,25 @@ class BreathingViewModel : ViewModel() {
     var vibrationIntensity by mutableStateOf(0.7f)
         private set
 
+    // Kurzer Countdown vor dem allerersten Start, damit der Kreis nicht
+    // sofort ausgedehnt startet, sondern klein beginnt und dann wächst.
+    var isCountingDown by mutableStateOf(true)
+        private set
+
+    var countdownValue by mutableIntStateOf(COUNTDOWN_START)
+        private set
+
     private var cycleJob: Job? = null
 
     init {
-        startCycle()
+        viewModelScope.launch {
+            for (value in COUNTDOWN_START downTo 1) {
+                countdownValue = value
+                delay(1_000L)
+            }
+            isCountingDown = false
+            startCycle()
+        }
     }
 
     fun setTechnique(technique: BreathingTechnique) {
@@ -52,5 +67,9 @@ class BreathingViewModel : ViewModel() {
                 completedCycles++
             }
         }
+    }
+
+    companion object {
+        private const val COUNTDOWN_START = 3
     }
 }

@@ -6,13 +6,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.panichelper.data.ContactRelationship
+import com.example.panichelper.data.TrustedContact
 import com.example.panichelper.util.PreferencesManager
+import java.util.UUID
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 /**
- * Verwaltet das Speichern und Laden der Telefonnummer der Vertrauensperson.
+ * Verwaltet das Speichern und Laden der Vertrauenspersonen.
  * Nutzt AndroidViewModel, um Zugriff auf den Application-Context für
  * den PreferencesManager (DataStore) zu erhalten.
  */
@@ -20,37 +23,46 @@ class HelpViewModel(application: Application) : AndroidViewModel(application) {
 
     private val preferencesManager = PreferencesManager(application)
 
-    // Aktueller Wert des Eingabefelds (kann sich vom gespeicherten Wert
-    // unterscheiden, solange der Nutzer noch nicht auf "Speichern" geklickt hat).
-    var phoneNumberInput by mutableStateOf("")
-        private set
-
-    // Zeigt an, ob zuletzt erfolgreich gespeichert wurde (für kurzes Feedback in der UI).
-    var isSaved by mutableStateOf(false)
+    // Aktuell gespeicherte Vertrauenspersonen, aus DataStore geladen.
+    var contacts by mutableStateOf<List<TrustedContact>>(emptyList())
         private set
 
     init {
-        // Beim Start: gespeicherte Nummer laden und als Eingabewert vorbelegen.
-        preferencesManager.trustedPhoneNumber
-            .onEach { savedNumber ->
-                if (savedNumber.isNotEmpty()) {
-                    phoneNumberInput = savedNumber
-                }
-            }
+        viewModelScope.launch {
+            preferencesManager.migrateLegacyPhoneNumberIfNeeded()
+        }
+        preferencesManager.trustedContacts
+            .onEach { loadedContacts -> contacts = loadedContacts }
             .launchIn(viewModelScope)
     }
 
-    /** Wird bei jeder Texteingabe im Telefonnummer-Feld aufgerufen. */
-    fun onPhoneNumberChange(newValue: String) {
-        phoneNumberInput = newValue
-        isSaved = false
+    /** Fügt eine neu ausgewählte Vertrauensperson zur Liste hinzu und speichert sie. */
+    fun addContact(name: String, phoneNumber: String, relationship: ContactRelationship) {
+        val newContact = TrustedContact(
+            id = UUID.randomUUID().toString(),
+            name = name,
+            phoneNumber = phoneNumber,
+            relationship = relationship
+        )
+        persist(contacts + newContact)
     }
 
-    /** Speichert die aktuell eingegebene Telefonnummer dauerhaft via DataStore. */
-    fun savePhoneNumber() {
+    /** Ändert die Beziehungsart einer bereits gespeicherten Vertrauensperson. */
+    fun updateContactRelationship(id: String, relationship: ContactRelationship) {
+        persist(contacts.map { contact ->
+            if (contact.id == id) contact.copy(relationship = relationship) else contact
+        })
+    }
+
+    /** Entfernt eine gespeicherte Vertrauensperson. */
+    fun removeContact(id: String) {
+        persist(contacts.filterNot { it.id == id })
+    }
+
+    private fun persist(updatedContacts: List<TrustedContact>) {
+        contacts = updatedContacts
         viewModelScope.launch {
-            preferencesManager.saveTrustedPhoneNumber(phoneNumberInput)
-            isSaved = true
+            preferencesManager.saveTrustedContacts(updatedContacts)
         }
     }
 }

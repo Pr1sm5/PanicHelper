@@ -33,3 +33,15 @@ val BreathingDark = Color(0xFF26A69A)
 
 // Fehler-/Hinweisfarbe (dezent, nicht aggressiv)
 val SoftError = Color(0xFFE57373)
+
+// Auswählbare Akzentfarben für das lokale Profil im täglichen Übungsmodus.
+val ProfileColorPalette = listOf(
+    Color(0xFFEF5350),
+    Color(0xFFAB47BC),
+    Color(0xFF5C6BC0),
+    Color(0xFF29B6F6),
+    Color(0xFF66BB6A),
+    Color(0xFFFFCA28),
+    Color(0xFFFF7043),
+    Color(0xFF8D6E63)
+)
