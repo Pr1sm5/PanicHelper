@@ -40,23 +40,12 @@
     <string name="distraction_image_description">Distraction image</string>
     <string name="distraction_next_button">Next image</string>
     <string name="distraction_random_button">Random image</string>
-    <string name="distraction_color_prompt_template">Find 5 objects that are %1$s.</string>
     <string-array name="distraction_image_questions">
         <item>What color is the fur?</item>
         <item>How many ears do you see?</item>
         <item>Look at the eyes.</item>
         <item>What emotion does the picture convey?</item>
         <item>Count the paws.</item>
-    </string-array>
-    <string-array name="distraction_grounding_colors">
-        <item>red</item>
-        <item>blue</item>
-        <item>green</item>
-        <item>yellow</item>
-        <item>orange</item>
-        <item>purple</item>
-        <item>turquoise</item>
-        <item>pink</item>
     </string-array>
     <string-array name="distraction_fixed_prompts">
         <item>Name five things you can see.</item>
