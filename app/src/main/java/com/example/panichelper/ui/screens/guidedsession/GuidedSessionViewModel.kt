@@ -3,6 +3,7 @@ package com.example.panichelper.ui.screens.guidedsession
 import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
@@ -66,6 +67,13 @@ class GuidedSessionViewModel(application: Application) : AndroidViewModel(applic
         private set
 
     var distractionStepIndex by mutableIntStateOf(0)
+        private set
+
+    // Gesamtdauer des aktuellen Grounding-Schritts - wird gebraucht, damit die
+    // Zwischen-Ansagen (siehe DistractionSounds.playForDistractionContent)
+    // wissen, wie viel Zeit für sie noch bleibt, ohne in den nächsten Schritt
+    // hineinzulaufen.
+    var distractionStepDurationMillis by mutableLongStateOf(GROUNDING_SEQUENCE.first().durationMillis)
         private set
 
     // Progressive Muskelentspannung
@@ -155,6 +163,7 @@ class GuidedSessionViewModel(application: Application) : AndroidViewModel(applic
         GROUNDING_SEQUENCE.forEachIndexed { index, step ->
             distractionStepIndex = index
             distractionContent = DistractionContent.TextContent(promptIndex = step.promptIndex)
+            distractionStepDurationMillis = step.durationMillis
             delay(step.durationMillis)
         }
     }

@@ -158,7 +158,7 @@ fun GuidedSessionScreen(
     val distractionContent = viewModel.distractionContent
     LaunchedEffect(stage, distractionContent) {
         if (stage == GuidedSessionStage.DISTRACTION) {
-            soundPlayer.playForDistractionContent(distractionContent)
+            soundPlayer.playForDistractionContent(distractionContent, viewModel.distractionStepDurationMillis)
             if (hapticsEnabled) {
                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             }
