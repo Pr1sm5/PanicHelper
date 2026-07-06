@@ -297,6 +297,41 @@ class SoundPlayer(
         }
     }
 
+    /**
+     * Blendet die Hintergrundmusik über [durationMillis] sanft aus, statt sie
+     * abrupt zu stoppen, und gibt den Player danach frei. Wartet die gesamte
+     * Ausblend-Dauer ab (suspend), damit Aufrufer z. B. erst danach zur
+     * nächsten Seite navigieren. Kein Effekt, falls gerade keine Hintergrund-
+     * musik läuft.
+     */
+    suspend fun fadeOutBackgroundMusic(durationMillis: Long = DEFAULT_FADE_OUT_DURATION_MS) {
+        withContext(Dispatchers.Main.immediate) {
+            val player = backgroundMusicPlayer ?: return@withContext
+            musicWatchdogJob?.cancel()
+            musicWatchdogJob = null
+            val startVolume = player.volume.coerceIn(0f, 1f)
+            if (startVolume <= 0f || durationMillis <= 0L) {
+                releaseBackgroundMusicPlayerLocked()
+                return@withContext
+            }
+            var elapsedMillis = 0L
+            while (elapsedMillis < durationMillis && backgroundMusicPlayer === player) {
+                delay(FADE_OUT_STEP_INTERVAL_MS)
+                elapsedMillis += FADE_OUT_STEP_INTERVAL_MS
+                val fraction = (1f - elapsedMillis.toFloat() / durationMillis).coerceIn(0f, 1f)
+                try {
+                    player.volume = startVolume * fraction
+                } catch (error: Exception) {
+                    Log.w(TAG, "Fehler beim Ausblenden der Hintergrundmusik", error)
+                    break
+                }
+            }
+            if (backgroundMusicPlayer === player) {
+                releaseBackgroundMusicPlayerLocked()
+            }
+        }
+    }
+
     private fun releaseBackgroundMusicPlayerLocked() {
         try {
             backgroundMusicPlayer?.release()
@@ -332,5 +367,7 @@ class SoundPlayer(
         private const val LOAD_WAIT_TIMEOUT_MS = 3_000L
         private const val LOAD_POLL_INTERVAL_MS = 50L
         private const val MUSIC_WATCHDOG_INTERVAL_MS = 2_000L
+        private const val DEFAULT_FADE_OUT_DURATION_MS = 900L
+        private const val FADE_OUT_STEP_INTERVAL_MS = 50L
     }
 }

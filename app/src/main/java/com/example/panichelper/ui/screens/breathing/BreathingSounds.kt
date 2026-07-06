@@ -4,6 +4,7 @@ import com.example.panichelper.R
 import com.example.panichelper.audio.SoundCategory
 import com.example.panichelper.audio.SoundPlayer
 import kotlin.random.Random
+import kotlinx.coroutines.delay
 
 /**
  * Sound-Kategorien der Atemübung, für den universellen [SoundPlayer].
@@ -22,7 +23,8 @@ import kotlin.random.Random
  */
 enum class BreathingSoundCategory(override val variants: List<Int>) : SoundCategory {
     START(listOf(R.raw.start_1)),
-    END(listOf(R.raw.end_1, R.raw.end_2)),
+    END_1(listOf(R.raw.end_1)),
+    END_2(listOf(R.raw.end_2)),
     BREATH_IN(listOf(R.raw.breath_in_1, R.raw.breath_in_2, R.raw.breath_in_3)),
     BREATH_OUT(listOf(R.raw.breath_out_1, R.raw.breath_out_2, R.raw.breath_out_3)),
     BREATH_HOLD(listOf(R.raw.breath_hold_1, R.raw.breath_hold_2, R.raw.breath_hold_3)),
@@ -31,6 +33,14 @@ enum class BreathingSoundCategory(override val variants: List<Int>) : SoundCateg
 
 private const val MIN_DURATION_FOR_CONSTRUCTIVE_MS = 5_000L
 private const val CONSTRUCTIVE_CHANCE = 0.3f
+private const val END_SEQUENCE_GAP_MS = 700L
+
+/** Spielt die beiden Abschluss-Zeilen nacheinander, mit einer kurzen Pause dazwischen. */
+suspend fun SoundPlayer.playEndSequence() {
+    play(BreathingSoundCategory.END_1)
+    delay(END_SEQUENCE_GAP_MS)
+    play(BreathingSoundCategory.END_2)
+}
 
 /**
  * Spielt den zur Atemphase passenden Hinweis. Während einer Halten-Phase wird

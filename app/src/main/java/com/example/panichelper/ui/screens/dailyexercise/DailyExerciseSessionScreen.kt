@@ -54,6 +54,7 @@ import com.example.panichelper.ui.screens.breathing.BreathingSoundCategory
 import com.example.panichelper.ui.screens.breathing.BreathingTechniques
 import com.example.panichelper.ui.screens.breathing.BreathingVisualState
 import com.example.panichelper.ui.screens.breathing.cancelBreathingHaptic
+import com.example.panichelper.ui.screens.breathing.playEndSequence
 import com.example.panichelper.ui.screens.breathing.playForBreathingPhase
 import com.example.panichelper.ui.screens.breathing.triggerBreathingHaptic
 import com.example.panichelper.ui.theme.BreathingDark
@@ -112,8 +113,8 @@ fun DailyExerciseSessionScreen(
     // Reagiert live auf den Audio-Schalter und das Sitzungsende, statt die Musik
     // nur beim Start zu prüfen - sonst läuft eine bereits gestartete
     // Hintergrundmusik nach dem Ausschalten oder nach Abschluss weiter.
-    LaunchedEffect(audioEnabled, isCompleted) {
-        if (audioEnabled && !isCompleted) {
+    LaunchedEffect(audioEnabled) {
+        if (audioEnabled) {
             soundPlayer.startBackgroundMusic(R.raw.background_music)
         } else {
             soundPlayer.stopBackgroundMusic()
@@ -137,7 +138,14 @@ fun DailyExerciseSessionScreen(
 
     LaunchedEffect(isCompleted) {
         if (isCompleted) {
-            soundPlayer.play(BreathingSoundCategory.END)
+            soundPlayer.playEndSequence()
+        }
+    }
+
+    val handleFinish: () -> Unit = {
+        coroutineScope.launch {
+            soundPlayer.fadeOutBackgroundMusic()
+            onFinish()
         }
     }
 
@@ -177,7 +185,7 @@ fun DailyExerciseSessionScreen(
                 title = { Text(stringResource(R.string.nav_daily_exercise)) },
                 navigationIcon = {
                     IconButton(
-                        onClick = onFinish,
+                        onClick = handleFinish,
                         modifier = Modifier.size(ACTION_BUTTON_SIZE)
                     ) {
                         Icon(
@@ -327,7 +335,7 @@ fun DailyExerciseSessionScreen(
             RoutineCompletionOverlay(
                 visible = isCompleted,
                 progress = viewModel.updatedProgress,
-                onFinish = onFinish
+                onFinish = handleFinish
             )
         }
     }

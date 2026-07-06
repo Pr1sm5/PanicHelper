@@ -48,6 +48,7 @@ import com.example.panichelper.ui.components.BreathingCircleDefaults
 import com.example.panichelper.ui.components.KeepScreenOn
 import com.example.panichelper.ui.components.RoutineCompletionOverlay
 import com.example.panichelper.ui.screens.breathing.BreathingSoundCategory
+import com.example.panichelper.ui.screens.breathing.playEndSequence
 import com.example.panichelper.ui.theme.BreathingDark
 import com.example.panichelper.ui.theme.BreathingLight
 import com.example.panichelper.util.PreferencesManager
@@ -95,7 +96,7 @@ fun PmrSessionScreen(
     val soundPlayer = remember {
         SoundPlayer(
             context,
-            listOf(BreathingSoundCategory.END) + PmrSoundCategory.entries
+            listOf(BreathingSoundCategory.END_1, BreathingSoundCategory.END_2) + PmrSoundCategory.entries
         ) { audioEnabled }
     }
 
@@ -109,8 +110,8 @@ fun PmrSessionScreen(
         soundPlayer.play(PmrSoundCategory.START)
     }
 
-    LaunchedEffect(audioEnabled, isCompleted) {
-        if (audioEnabled && !isCompleted) {
+    LaunchedEffect(audioEnabled) {
+        if (audioEnabled) {
             soundPlayer.startBackgroundMusic(R.raw.background_music)
         } else {
             soundPlayer.stopBackgroundMusic()
@@ -130,7 +131,14 @@ fun PmrSessionScreen(
 
     LaunchedEffect(isCompleted) {
         if (isCompleted) {
-            soundPlayer.play(BreathingSoundCategory.END)
+            soundPlayer.playEndSequence()
+        }
+    }
+
+    val handleFinish: () -> Unit = {
+        coroutineScope.launch {
+            soundPlayer.fadeOutBackgroundMusic()
+            onFinish()
         }
     }
 
@@ -170,7 +178,7 @@ fun PmrSessionScreen(
                 title = { Text(stringResource(R.string.nav_pmr)) },
                 navigationIcon = {
                     IconButton(
-                        onClick = onFinish,
+                        onClick = handleFinish,
                         modifier = Modifier.size(ACTION_BUTTON_SIZE)
                     ) {
                         Icon(
@@ -270,7 +278,7 @@ fun PmrSessionScreen(
             RoutineCompletionOverlay(
                 visible = isCompleted,
                 progress = viewModel.updatedProgress,
-                onFinish = onFinish
+                onFinish = handleFinish
             )
         }
     }

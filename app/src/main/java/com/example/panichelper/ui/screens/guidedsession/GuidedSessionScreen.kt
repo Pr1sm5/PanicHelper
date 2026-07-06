@@ -65,6 +65,7 @@ import com.example.panichelper.ui.screens.breathing.BreathingPhaseConfig
 import com.example.panichelper.ui.screens.breathing.BreathingSoundCategory
 import com.example.panichelper.ui.screens.breathing.BreathingVisualState
 import com.example.panichelper.ui.screens.breathing.cancelBreathingHaptic
+import com.example.panichelper.ui.screens.breathing.playEndSequence
 import com.example.panichelper.ui.screens.breathing.playForBreathingPhase
 import com.example.panichelper.ui.screens.breathing.triggerBreathingHaptic
 import com.example.panichelper.ui.screens.distraction.DistractionSoundCategory
@@ -126,8 +127,8 @@ fun GuidedSessionScreen(
         soundPlayer.play(BreathingSoundCategory.START)
     }
 
-    LaunchedEffect(audioEnabled, isCompleted) {
-        if (audioEnabled && !isCompleted) {
+    LaunchedEffect(audioEnabled) {
+        if (audioEnabled) {
             soundPlayer.startBackgroundMusic(R.raw.background_music)
         } else {
             soundPlayer.stopBackgroundMusic()
@@ -136,7 +137,14 @@ fun GuidedSessionScreen(
 
     LaunchedEffect(isCompleted) {
         if (isCompleted) {
-            soundPlayer.play(BreathingSoundCategory.END)
+            soundPlayer.playEndSequence()
+        }
+    }
+
+    val handleFinish: () -> Unit = {
+        coroutineScope.launch {
+            soundPlayer.fadeOutBackgroundMusic()
+            onFinish()
         }
     }
 
@@ -189,7 +197,7 @@ fun GuidedSessionScreen(
                 title = { Text(stringResource(R.string.nav_guided_session)) },
                 navigationIcon = {
                     IconButton(
-                        onClick = onFinish,
+                        onClick = handleFinish,
                         modifier = Modifier.size(ACTION_BUTTON_SIZE)
                     ) {
                         Icon(
@@ -300,7 +308,7 @@ fun GuidedSessionScreen(
             RoutineCompletionOverlay(
                 visible = isCompleted,
                 progress = viewModel.updatedProgress,
-                onFinish = onFinish
+                onFinish = handleFinish
             )
         }
     }

@@ -89,8 +89,8 @@ fun BreathingScreen(
     // Reagiert live auf den Audio-Schalter und das Sitzungsende, statt die Musik
     // nur beim Start zu prüfen - sonst läuft eine bereits gestartete Hintergrundmusik
     // nach dem Ausschalten bzw. nach Ablauf der drei Minuten weiter.
-    LaunchedEffect(audioEnabled, isCompleted) {
-        if (audioEnabled && !isCompleted) {
+    LaunchedEffect(audioEnabled) {
+        if (audioEnabled) {
             soundPlayer.startBackgroundMusic(R.raw.background_music)
         } else {
             soundPlayer.stopBackgroundMusic()
@@ -99,7 +99,14 @@ fun BreathingScreen(
 
     LaunchedEffect(isCompleted) {
         if (isCompleted) {
-            soundPlayer.play(BreathingSoundCategory.END)
+            soundPlayer.playEndSequence()
+        }
+    }
+
+    val handleFinish: () -> Unit = {
+        coroutineScope.launch {
+            soundPlayer.fadeOutBackgroundMusic()
+            onNavigateBack()
         }
     }
 
@@ -154,7 +161,7 @@ fun BreathingScreen(
                 title = { Text(stringResource(R.string.nav_breathing)) },
                 navigationIcon = {
                     IconButton(
-                        onClick = onNavigateBack,
+                        onClick = handleFinish,
                         modifier = Modifier.size(ACTION_BUTTON_SIZE)
                     ) {
                         Icon(
@@ -330,7 +337,7 @@ fun BreathingScreen(
         RoutineCompletionOverlay(
             visible = isCompleted,
             progress = null,
-            onFinish = onNavigateBack
+            onFinish = handleFinish
         )
         }
     }
