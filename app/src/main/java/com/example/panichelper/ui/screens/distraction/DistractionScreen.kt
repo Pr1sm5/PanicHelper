@@ -63,6 +63,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.panichelper.R
 import com.example.panichelper.audio.SoundPlayer
 import com.example.panichelper.data.DistractionContent
+import com.example.panichelper.ui.components.KeepScreenOn
 import com.example.panichelper.ui.components.PrimaryButton
 import com.example.panichelper.util.PreferencesManager
 import kotlinx.coroutines.launch
@@ -95,6 +96,8 @@ fun DistractionScreen(
     val audioEnabled by preferencesManager.audioEnabled.collectAsState(initial = true)
     val hapticsEnabled by preferencesManager.hapticsEnabled.collectAsState(initial = true)
     val soundPlayer = remember { SoundPlayer(context, DistractionSoundCategory.entries) { audioEnabled } }
+
+    KeepScreenOn()
 
     DisposableEffect(Unit) {
         onDispose { soundPlayer.release() }

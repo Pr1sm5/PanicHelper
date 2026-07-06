@@ -8,7 +8,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.panichelper.data.DistractionContent
-import com.example.panichelper.data.DistractionRepository
 import com.example.panichelper.data.RoutineProgress
 import com.example.panichelper.ui.screens.breathing.BreathingTechniques
 import com.example.panichelper.ui.screens.pmr.PmrRoutine
@@ -61,7 +60,9 @@ class GuidedSessionViewModel(application: Application) : AndroidViewModel(applic
         private set
 
     // Grounding/Ablenkung
-    var distractionContent by mutableStateOf(randomDistractionContent())
+    var distractionContent by mutableStateOf(
+        DistractionContent.TextContent(promptIndex = GROUNDING_SEQUENCE.first().promptIndex)
+    )
         private set
 
     var distractionStepIndex by mutableIntStateOf(0)
@@ -86,23 +87,24 @@ class GuidedSessionViewModel(application: Application) : AndroidViewModel(applic
     private var sessionJob: Job? = null
 
     init {
+
         sessionJob = viewModelScope.launch {
             runCountdown()
 
             stage = GuidedSessionStage.BREATHING
             runBreathingStage()
 
-            stage = GuidedSessionStage.TRANSITION_TO_DISTRACTION
-            runTransitionStage(TRANSITION_DURATION_MS)
-
-            stage = GuidedSessionStage.DISTRACTION
-            runDistractionStage()
-
             stage = GuidedSessionStage.TRANSITION_TO_PMR
             runTransitionStage(PMR_TRANSITION_DURATION_MS)
 
             stage = GuidedSessionStage.PMR
             runPmrStage()
+
+            stage = GuidedSessionStage.TRANSITION_TO_DISTRACTION
+            runTransitionStage(TRANSITION_DURATION_MS)
+
+            stage = GuidedSessionStage.DISTRACTION
+            runDistractionStage()
 
             finishSession()
         }
@@ -146,11 +148,14 @@ class GuidedSessionViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    // Reihenfolge und Dauer je Schritt richten sich nach dem, was in der
+    // jeweiligen Zeit realistisch zu schaffen ist (mehr Objekte suchen dauert
+    // länger als an einer Sache riechen oder schmecken).
     private suspend fun runDistractionStage() {
-        repeat(DISTRACTION_ITEM_COUNT) { index ->
+        GROUNDING_SEQUENCE.forEachIndexed { index, step ->
             distractionStepIndex = index
-            distractionContent = randomDistractionContent()
-            delay(DISTRACTION_ITEM_DURATION_MS)
+            distractionContent = DistractionContent.TextContent(promptIndex = step.promptIndex)
+            delay(step.durationMillis)
         }
     }
 
@@ -207,11 +212,21 @@ class GuidedSessionViewModel(application: Application) : AndroidViewModel(applic
         // bevor die erste Anspannen-Phase beginnt.
         private const val PMR_TRANSITION_DURATION_MS = 9_000L
 
-        private const val DISTRACTION_ITEM_DURATION_MS = 30_000L
         const val DISTRACTION_ITEM_COUNT = 5
         private const val PMR_DURATION_MS = 3 * 60_000L
 
-        private fun randomDistractionContent(): DistractionContent =
-            DistractionRepository.getContentAt(DistractionRepository.randomContentIndex())
+        // Feste 5-4-3-2-1-Grounding-Reihenfolge (promptIndex passend zu
+        // R.array.distraction_fixed_prompts) statt zufälliger Inhalte - reale
+        // Objekte in der eigenen Umgebung wirken stärker gegen Gedankenspiralen
+        // als zufällige Bilder/Fragen. Dauer pro Schritt an die Aufgabe angepasst.
+        private val GROUNDING_SEQUENCE = listOf(
+            GroundingStep(promptIndex = 0, durationMillis = 40_000L), // 5 Dinge sehen
+            GroundingStep(promptIndex = 3, durationMillis = 35_000L), // 4 Dinge berühren
+            GroundingStep(promptIndex = 2, durationMillis = 30_000L), // 3 Geräusche hören
+            GroundingStep(promptIndex = 1, durationMillis = 20_000L), // 2 Gerüche wahrnehmen
+            GroundingStep(promptIndex = 4, durationMillis = 15_000L) // 1 Sache schmecken
+        )
     }
+
+    private data class GroundingStep(val promptIndex: Int, val durationMillis: Long)
 }

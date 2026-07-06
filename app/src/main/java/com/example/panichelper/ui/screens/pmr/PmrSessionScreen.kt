@@ -45,6 +45,7 @@ import com.example.panichelper.R
 import com.example.panichelper.audio.SoundPlayer
 import com.example.panichelper.ui.components.AnimatedBreathingCircle
 import com.example.panichelper.ui.components.BreathingCircleDefaults
+import com.example.panichelper.ui.components.KeepScreenOn
 import com.example.panichelper.ui.components.RoutineCompletionOverlay
 import com.example.panichelper.ui.screens.breathing.BreathingSoundCategory
 import com.example.panichelper.ui.theme.BreathingDark
@@ -97,6 +98,8 @@ fun PmrSessionScreen(
             listOf(BreathingSoundCategory.END) + PmrSoundCategory.entries
         ) { audioEnabled }
     }
+
+    KeepScreenOn()
 
     DisposableEffect(Unit) {
         onDispose { soundPlayer.release() }

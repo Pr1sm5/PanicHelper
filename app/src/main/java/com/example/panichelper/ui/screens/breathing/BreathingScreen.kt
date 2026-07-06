@@ -48,6 +48,7 @@ import com.example.panichelper.R
 import com.example.panichelper.audio.SoundPlayer
 import com.example.panichelper.ui.components.AnimatedBreathingCircle
 import com.example.panichelper.ui.components.BreathingCircleDefaults
+import com.example.panichelper.ui.components.KeepScreenOn
 import com.example.panichelper.ui.components.RoutineCompletionOverlay
 import com.example.panichelper.ui.theme.BreathingDark
 import com.example.panichelper.ui.theme.BreathingLight
@@ -74,6 +75,8 @@ fun BreathingScreen(
     val audioEnabled by preferencesManager.audioEnabled.collectAsState(initial = true)
     val hapticsEnabled by preferencesManager.hapticsEnabled.collectAsState(initial = true)
     val soundPlayer = remember { SoundPlayer(context, BreathingSoundCategory.entries) { audioEnabled } }
+
+    KeepScreenOn()
 
     DisposableEffect(Unit) {
         onDispose { soundPlayer.release() }

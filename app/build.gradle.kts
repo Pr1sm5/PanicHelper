@@ -86,6 +86,14 @@ dependencies {
     // Per-App-Sprachumschaltung (funktioniert auch ohne AppCompatActivity)
     implementation("androidx.appcompat:appcompat:1.7.0")
 
+    // ExoPlayer für die Hintergrundmusik: im Gegensatz zu MediaPlayer sind
+    // play()/seekTo()/etc. nicht-blockierende Aufrufe (werden intern an einen
+    // eigenen Wiedergabe-Thread weitergereicht), sodass ein hängender/fehlerhafter
+    // Decoder nie unseren Coroutine-Mutex und damit die ganze Musik-Wiedergabe
+    // dauerhaft blockieren kann - genau das Problem, das MediaPlayer auf manchen
+    // Geräten (u. a. Pixel 8 Pro) verursacht hat.
+    implementation("androidx.media3:media3-exoplayer:1.5.1")
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

@@ -59,6 +59,7 @@ import com.example.panichelper.audio.SoundPlayer
 import com.example.panichelper.data.DistractionContent
 import com.example.panichelper.ui.components.AnimatedBreathingCircle
 import com.example.panichelper.ui.components.BreathingCircleDefaults
+import com.example.panichelper.ui.components.KeepScreenOn
 import com.example.panichelper.ui.components.RoutineCompletionOverlay
 import com.example.panichelper.ui.screens.breathing.BreathingPhaseConfig
 import com.example.panichelper.ui.screens.breathing.BreathingSoundCategory
@@ -114,6 +115,8 @@ fun GuidedSessionScreen(
     val soundCategories: List<SoundCategory> =
         BreathingSoundCategory.entries + DistractionSoundCategory.entries + PmrSoundCategory.entries
     val soundPlayer = remember { SoundPlayer(context, soundCategories) { audioEnabled } }
+
+    KeepScreenOn()
 
     DisposableEffect(Unit) {
         onDispose { soundPlayer.release() }
@@ -247,17 +250,6 @@ fun GuidedSessionScreen(
                             remainingMillis = viewModel.breathingRemainingMillis
                         )
 
-                        GuidedSessionStage.TRANSITION_TO_DISTRACTION -> TransitionStageContent(
-                            remainingSeconds = viewModel.transitionRemainingSeconds,
-                            messageRes = R.string.guided_session_transition_message
-                        )
-
-                        GuidedSessionStage.DISTRACTION -> DistractionStageContent(
-                            content = distractionContent,
-                            stepIndex = viewModel.distractionStepIndex,
-                            totalCount = GuidedSessionViewModel.DISTRACTION_ITEM_COUNT
-                        )
-
                         GuidedSessionStage.TRANSITION_TO_PMR -> TransitionStageContent(
                             remainingSeconds = viewModel.transitionRemainingSeconds,
                             messageRes = R.string.guided_session_transition_pmr_message
@@ -266,9 +258,20 @@ fun GuidedSessionScreen(
                         // Bleibt nach Abschluss auf dem letzten PMR-Stand eingefroren,
                         // statt auf einen leeren Inhalt zu springen, während das
                         // Overlay noch einblendet.
-                        GuidedSessionStage.PMR, GuidedSessionStage.COMPLETED -> PmrStageContent(
+                        GuidedSessionStage.PMR -> PmrStageContent(
                             phase = pmrPhase,
                             remainingMillis = viewModel.pmrRemainingMillis
+                        )
+
+                        GuidedSessionStage.TRANSITION_TO_DISTRACTION-> TransitionStageContent(
+                            remainingSeconds = viewModel.transitionRemainingSeconds,
+                            messageRes = R.string.guided_session_transition_message
+                        )
+
+                        GuidedSessionStage.DISTRACTION, GuidedSessionStage.COMPLETED -> DistractionStageContent(
+                            content = distractionContent,
+                            stepIndex = viewModel.distractionStepIndex,
+                            totalCount = GuidedSessionViewModel.DISTRACTION_ITEM_COUNT
                         )
                     }
                 }

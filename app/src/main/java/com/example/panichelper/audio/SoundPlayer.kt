@@ -2,20 +2,24 @@ package com.example.panichelper.audio
 
 import android.content.Context
 import android.media.AudioAttributes
-import android.media.MediaPlayer
 import android.media.SoundPool
 import android.util.Log
 import androidx.annotation.RawRes
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.datasource.RawResourceDataSource
+import androidx.media3.exoplayer.ExoPlayer
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 private const val TAG = "SoundPlayer"
@@ -24,18 +28,28 @@ private const val TAG = "SoundPlayer"
  * Universeller Sound-Player fürs ganze Projekt: kurze Hinweis-Clips über
  * einen [SoundPool] (Zufallsauswahl innerhalb einer [SoundCategory], nie
  * zweimal hintereinander dieselbe Variante) sowie optional eine leise
- * Hintergrundmusik in Endlosschleife über [MediaPlayer].
+ * Hintergrundmusik in Endlosschleife über [ExoPlayer].
  *
- * [SoundPool.load] und [MediaPlayer.create] öffnen Dateien und bereiten die
- * Dekodierung synchron vor - auf dem Hauptthread aufgerufen (z. B. direkt aus
- * `remember {}`/`LaunchedEffect`) blockiert das die UI spürbar, gerade beim
- * Vorladen mehrerer Kategorien auf einmal beim Betreten eines Screens. Diese
- * Klasse verlagert deshalb jedes Laden/Erstellen auf einen eigenen
- * IO-Dispatcher-Scope; nur die schnellen Freigabe-Aufrufe in [release]
- * laufen synchron.
+ * Für die Hintergrundmusik kommt bewusst ExoPlayer statt `MediaPlayer` zum
+ * Einsatz: `MediaPlayer.seekTo()`/`start()` sind blockierende native
+ * Aufrufe - hängt der Decoder auf einem Gerät einmal (auf einem Pixel 8 Pro
+ * beobachtet, vermutlich ein kaputter Codec2-mp3-Decoder), blockiert das
+ * für immer den Coroutine-Mutex und damit die komplette Musik-Wiedergabe.
+ * ExoPlayers Steuermethoden (`play()`/`seekTo()`/...) reichen Anweisungen
+ * dagegen nur an einen internen Wiedergabe-Thread weiter und kehren sofort
+ * zurück - ein hängender Decoder kann so nie unseren Code blockieren.
+ * ExoPlayer darf allerdings nur vom Thread aus gesteuert werden, auf dem es
+ * erstellt wurde (hier: der Hauptthread, über [mainScope]).
  *
- * Sowohl einzelne Ladevorgänge als auch der Scope insgesamt fangen Fehler ab
- * und loggen sie nur, statt die App abstürzen zu lassen - manche Geräte/
+ * [SoundPool.load] öffnet Dateien und bereitet die Dekodierung synchron vor
+ * - auf dem Hauptthread aufgerufen (z. B. direkt aus `remember {}`/
+ * `LaunchedEffect`) blockiert das die UI spürbar, gerade beim Vorladen
+ * mehrerer Kategorien auf einmal beim Betreten eines Screens. Diese Klasse
+ * verlagert deshalb jedes Laden auf einen eigenen IO-Dispatcher-Scope; nur
+ * die schnellen Freigabe-Aufrufe in [release] laufen synchron.
+ *
+ * Sowohl einzelne Ladevorgänge als auch die Scopes insgesamt fangen Fehler
+ * ab und loggen sie nur, statt die App abstürzen zu lassen - manche Geräte/
  * Emulatoren (insbesondere der Android-Studio-Emulator mit seinem
  * softwarebasierten Audio-Backend) können beim Dekodieren einzelner Clips
  * scheitern, obwohl auf echten Geräten alles funktioniert; das darf nie mehr
@@ -65,17 +79,25 @@ class SoundPlayer(
 
     private val appContext = context.applicationContext
 
-    // Eigener Hintergrund-Scope fürs Laden/Erstellen, damit das nie den
-    // Hauptthread (Compose-Komposition/Recomposition) blockiert. Der
-    // ExceptionHandler ist ein zusätzliches Sicherheitsnetz: Sollte trotz der
-    // try/catches unten irgendwo eine Ausnahme durchrutschen, wird sie
+    // Eigener Hintergrund-Scope fürs Laden der kurzen SoundPool-Clips, damit
+    // das nie den Hauptthread (Compose-Komposition/Recomposition) blockiert.
+    // Der ExceptionHandler ist ein zusätzliches Sicherheitsnetz: Sollte trotz
+    // der try/catches unten irgendwo eine Ausnahme durchrutschen, wird sie
     // geloggt statt den Prozess abstürzen zu lassen.
     private val backgroundScope = CoroutineScope(
         SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, error ->
             Log.w(TAG, "Unerwarteter Fehler in einer Audio-Hintergrundaufgabe", error)
         }
     )
-    private val musicMutex = Mutex()
+
+    // ExoPlayer darf nur vom Thread aus gesteuert werden, auf dem es erstellt
+    // wurde - deshalb ein eigener, auf den Hauptthread festgelegter Scope nur
+    // für die Hintergrundmusik.
+    private val mainScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.Main.immediate + CoroutineExceptionHandler { _, error ->
+            Log.w(TAG, "Unerwarteter Fehler bei der Hintergrundmusik-Steuerung", error)
+        }
+    )
 
     @Volatile
     private var isReleased = false
@@ -104,7 +126,10 @@ class SoundPlayer(
     // play()-Aufrufe für noch nicht fertig geladene IDs).
     private val loadedSoundIds = ConcurrentHashMap.newKeySet<Int>()
 
-    private var backgroundMusicPlayer: MediaPlayer? = null
+    // Nur vom mainScope (Hauptthread) aus gelesen/verändert - kein zusätzlicher
+    // Lock nötig, da Dispatchers.Main.immediate alles auf einen Thread verengt.
+    private var backgroundMusicPlayer: ExoPlayer? = null
+    private var musicWatchdogJob: Job? = null
 
     init {
         soundPool.setOnLoadCompleteListener { _, sampleId, status ->
@@ -172,40 +197,103 @@ class SoundPlayer(
         }
     }
 
-    /** Startet eine leise Hintergrundmusik in Endlosschleife (kein Effekt, falls schon aktiv). */
+    /**
+     * Startet eine leise Hintergrundmusik in Endlosschleife (kein Effekt, falls schon aktiv).
+     *
+     * Nutzt ExoPlayers eingebautes [Player.REPEAT_MODE_ONE] fürs Schleifen -
+     * das passiert komplett innerhalb von ExoPlayers eigenem Wiedergabe-Thread,
+     * ganz ohne manuelles `seekTo`/`start` unsererseits. Ein zusätzlicher
+     * [ensureMusicWatchdog] prüft periodisch den Zustand und stößt bei Bedarf
+     * eine Neuvorbereitung an (z. B. nach einem [Player.Listener.onPlayerError]).
+     */
     fun startBackgroundMusic(@RawRes resId: Int, volume: Float = DEFAULT_BACKGROUND_MUSIC_VOLUME) {
         if (!isEnabled() || isReleased) return
-        backgroundScope.launch {
+        mainScope.launch {
+            if (isReleased || backgroundMusicPlayer != null || !isEnabled()) return@launch
             val player = try {
-                MediaPlayer.create(appContext, resId)
+                ExoPlayer.Builder(appContext).build()
             } catch (error: Exception) {
-                Log.w(TAG, "Konnte Hintergrundmusik nicht erstellen", error)
-                null
-            } ?: return@launch
+                Log.w(TAG, "Konnte ExoPlayer nicht erstellen", error)
+                return@launch
+            }
+            try {
+                player.setMediaItem(MediaItem.fromUri(RawResourceDataSource.buildRawResourceUri(resId)))
+                player.repeatMode = Player.REPEAT_MODE_ONE
+                player.volume = volume
+                player.addListener(object : Player.Listener {
+                    override fun onPlayerError(error: PlaybackException) {
+                        Log.w(TAG, "ExoPlayer-Fehler bei der Hintergrundmusik, versuche Neuvorbereitung", error)
+                        if (backgroundMusicPlayer === player) {
+                            try {
+                                player.prepare()
+                                player.playWhenReady = true
+                            } catch (recoverError: Exception) {
+                                Log.w(TAG, "Konnte nach ExoPlayer-Fehler nicht neu starten", recoverError)
+                            }
+                        }
+                    }
+                })
+                player.playWhenReady = true
+                player.prepare()
+                backgroundMusicPlayer = player
+                ensureMusicWatchdog(resId, volume)
+            } catch (error: Exception) {
+                Log.w(TAG, "Konnte Hintergrundmusik nicht starten", error)
+                player.release()
+            }
+        }
+    }
 
-            musicMutex.withLock {
-                if (isReleased || backgroundMusicPlayer != null || !isEnabled()) {
-                    player.release()
-                    return@withLock
+    /**
+     * Prüft in regelmäßigen Abständen, ob die Hintergrundmusik wirklich noch
+     * läuft, und stößt sonst eine Neuvorbereitung an. Läuft nur einmal pro
+     * aktiver Wiedergabe (kein Effekt, falls schon ein Watchdog aktiv ist).
+     * Da alle ExoPlayer-Aufrufe nicht-blockierend sind, kann dieser Watchdog
+     * selbst nie hängen bleiben - anders als der alte MediaPlayer-Ansatz.
+     */
+    private fun ensureMusicWatchdog(resId: Int, volume: Float) {
+        if (musicWatchdogJob?.isActive == true) return
+        musicWatchdogJob = mainScope.launch {
+            while (isActive) {
+                delay(MUSIC_WATCHDOG_INTERVAL_MS)
+                if (isReleased || !isEnabled()) continue
+                val player = backgroundMusicPlayer
+                if (player == null) {
+                    startBackgroundMusic(resId, volume)
+                    continue
                 }
-                try {
-                    player.isLooping = true
-                    player.setVolume(volume, volume)
-                    player.start()
-                    backgroundMusicPlayer = player
-                } catch (error: Exception) {
-                    Log.w(TAG, "Konnte Hintergrundmusik nicht starten", error)
-                    player.release()
+                Log.d(
+                    TAG,
+                    "Watchdog-Check: isPlaying=${player.isPlaying} state=${player.playbackState} " +
+                        "playWhenReady=${player.playWhenReady} position=${player.currentPosition}ms"
+                )
+                when {
+                    player.playbackState == Player.STATE_IDLE -> {
+                        Log.w(TAG, "Hintergrundmusik im IDLE-Zustand, bereite neu vor")
+                        try {
+                            player.prepare()
+                            player.playWhenReady = true
+                        } catch (error: Exception) {
+                            Log.w(TAG, "Neuvorbereitung fehlgeschlagen, baue Player neu auf", error)
+                            releaseBackgroundMusicPlayerLocked()
+                            startBackgroundMusic(resId, volume)
+                        }
+                    }
+                    player.playbackState == Player.STATE_READY && !player.isPlaying -> {
+                        Log.w(TAG, "Hintergrundmusik bereit, spielt aber nicht - stoße Wiedergabe an")
+                        player.playWhenReady = true
+                        player.play()
+                    }
                 }
             }
         }
     }
 
     fun stopBackgroundMusic() {
-        backgroundScope.launch {
-            musicMutex.withLock {
-                releaseBackgroundMusicPlayerLocked()
-            }
+        mainScope.launch {
+            musicWatchdogJob?.cancel()
+            musicWatchdogJob = null
+            releaseBackgroundMusicPlayerLocked()
         }
     }
 
@@ -221,6 +309,8 @@ class SoundPlayer(
     /** Gibt alle Ressourcen frei. Muss beim Verlassen des Screens aufgerufen werden. */
     fun release() {
         isReleased = true
+        musicWatchdogJob?.cancel()
+        musicWatchdogJob = null
         backgroundScope.cancel()
         try {
             backgroundMusicPlayer?.release()
@@ -228,6 +318,7 @@ class SoundPlayer(
             Log.w(TAG, "Fehler beim Freigeben der Hintergrundmusik", error)
         }
         backgroundMusicPlayer = null
+        mainScope.cancel()
         try {
             soundPool.release()
         } catch (error: Exception) {
@@ -240,5 +331,6 @@ class SoundPlayer(
         const val DEFAULT_BACKGROUND_MUSIC_VOLUME = 0.3f
         private const val LOAD_WAIT_TIMEOUT_MS = 3_000L
         private const val LOAD_POLL_INTERVAL_MS = 50L
+        private const val MUSIC_WATCHDOG_INTERVAL_MS = 2_000L
     }
 }
